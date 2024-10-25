@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import logger, { exitLog } from "@logger";
 import { Level, levels } from "log4js";
+
 class Config {
   private static instance?: Config;
 
@@ -18,8 +19,11 @@ class Config {
     if (env.error) exitLog("Missing environment file or bad .env");
     this.ENV = "production";
     if (!process.env.NODE_ENV || process.env.NODE_ENV.includes("dev")) this.ENV = "development";
+    logger.info(`Environment set to: ${this.ENV}`);
     this.LOG_LEVEL = this.parseLogLevel();
+    logger.info(`Setting log level to: ${this.LOG_LEVEL}`);
     this.SERVER_PORT = this.parseServerPort();
+    logger.info(`Setting server port to: ${this.SERVER_PORT}`);
   }
 
   private parseLogLevel(): Level {
@@ -42,7 +46,7 @@ class Config {
       case "ALL":
         return levels.ALL;
       default:
-        return exitLog(`Bad LOG_LEVEL in .env`);
+        return exitLog(`Invalid LOG_LEVEL in .env`);
     }
   }
 
@@ -50,8 +54,9 @@ class Config {
     let port = 3000;
     if (!process.env.ZKP_SERVER_PORT) return port;
     port = parseInt(process.env.ZKP_SERVER_PORT);
-    if (isNaN(port)) exitLog(`Bad PORT in .env`);
+    if (isNaN(port)) exitLog(`Invalid PORT in .env`);
     return port;
   }
 }
+
 export default Config.getInstance();

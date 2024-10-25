@@ -1,0 +1,117 @@
+1. Compile the Circuit:
+   circom FiscalCodeHashCheck.circom --r1cs --wasm --sym -o build
+
+   //We can use the option --c before the --o to generate a file_cpp directory
+
+2. Generate the Witness:
+   node build/FiscalCodeHashCheck_js/generate_witness.js build/FiscalCodeHashCheck_js/FiscalCodeHashCheck.wasm input.json witness.wtns
+
+   //In the cpp directory we can call ./file_cpp input.json witness.wtns to obtain the same result
+
+3. Set Up the Trusted Setup:
+   //Non circuit specific ceremony
+   snarkjs powersoftau new bn128 12 pot12_0000.ptau -v
+   snarkjs powersoftau contribute pot12_0000.ptau pot12_0001.ptau --name="First contribution" -v
+   
+   //Circuit specific after this commadn which initialize phase2
+   snarkjs powersoftau prepare phase2 pot12_0001.ptau pot12_final.ptau -v
+
+4. Generate the .zkey File:
+   snarkjs groth16 setup build/FiscalCodeHashCheck.r1cs pot12_final.ptau build/circuit_0000.zkey
+   snarkjs zkey contribute build/circuit_0000.zkey build/circuit_final.zkey --name="ZK_DIGSIG_KYC" -v
+   snarkjs zkey export verificationkey build/circuit_final.zkey build/verification_key.json
+
+5. Generate the Proof:
+   snarkjs groth16 prove build/circuit_final.zkey witness.wtns proof.json public.json
+
+6. Verify the Proof:
+   snarkjs groth16 verify build/verification_key.json public.json proof.json
+
+If everything is correct, you should see: snarkJS: OK!
+
+7. Solidity code:
+   snarkjs zkey export solidityverifier build/circuit_final.zkey verifier.sol
+
+/*
+The Verifier has a view function called verifyProof that returns TRUE if and only if the proof and the inputs are valid. To facilitate the call, you can use snarkJS to generate the parameters of the call by typing:
+snarkjs generatecall
+Cut and paste the output of the command to the parameters field of the verifyProof method in Remix. If everything works fine, this method should return TRUE. You can try to change just a single bit of the parameters, and you will see that the result is verifiable FALSE.
+*/
+
+
+1. Compile the Circuit:
+   circom FiscalCodeRsaCheck.circom --r1cs --wasm --sym -o build
+
+2. Generate the Witness:
+   node build/FiscalCodeRsaCheck_js/generate_witness.js build/FiscalCodeRsaCheck_js/FiscalCodeRsaCheck.wasm input.json witness.wtns
+
+3. Set Up the Trusted Setup:
+   // Non-circuit specific ceremony
+   snarkjs powersoftau new bn128 21 pot21_0000.ptau -v
+   snarkjs powersoftau contribute pot21_0000.ptau pot21_0001.ptau --name="First contribution" -v
+   
+   // Circuit specific after this command which initializes phase 2
+   snarkjs powersoftau prepare phase2 pot21_0001.ptau pot21_final.ptau -v
+
+4. Generate the .zkey File:
+   snarkjs groth16 setup build/FiscalCodeRsaCheck.r1cs pot21_final.ptau build/circuit_0000.zkey
+   snarkjs zkey contribute build/circuit_0000.zkey build/circuit_final.zkey --name="ZK_DIGSIG_KYC" -v
+   snarkjs zkey export verificationkey build/circuit_final.zkey build/verification_key.json
+
+5. Generate the Proof:
+   snarkjs groth16 prove build/circuit_final.zkey witness.wtns proof.json public.json
+
+6. Verify the Proof:
+   snarkjs groth16 verify build/verification_key.json public.json proof.json
+
+   If everything is correct, you should see: snarkJS: OK!
+
+7. Solidity code:
+   snarkjs zkey export solidityverifier build/circuit_final.zkey verifier.sol
+
+/*
+The Verifier has a view function called verifyProof that returns TRUE if and only if the proof and the inputs are valid. To facilitate the call, you can use snarkJS to generate the parameters of the call by typing:
+snarkjs generatecall
+Cut and paste the output of the command to the parameters field of the verifyProof method in Remix. If everything works fine, this method should return TRUE. You can try to change just a single bit of the parameters, and you will see that the result is verifiable FALSE.
+*/
+
+
+1. Compile the Circuit:
+   circom FiscalCodeHash256Check.circom --r1cs --wasm --sym -o build
+
+   //We can use the option --c before the --o to generate a file_cpp directory
+
+2. Generate the Witness:
+   node build/FiscalCodeHash256Check_js/generate_witness.js build/FiscalCodeHash256Check_js/FiscalCodeHash256Check.wasm input.json witness.wtns
+
+   //In the cpp directory we can call ./file_cpp input.json witness.wtns to obtain the same result
+
+3. Set Up the Trusted Setup:
+   //Non circuit specific ceremony
+   snarkjs powersoftau new bn128 16 pot16_0000.ptau -v
+   snarkjs powersoftau contribute pot16_0000.ptau pot16_0001.ptau --name="First contribution" -v
+   
+   //Circuit specific after this command which initializes phase 2
+   snarkjs powersoftau prepare phase2 pot16_0001.ptau pot16_final.ptau -v
+
+4. Generate the .zkey File:
+   snarkjs groth16 setup build/FiscalCodeHash256Check.r1cs pot16_final.ptau build/circuit_0000.zkey
+   snarkjs zkey contribute build/circuit_0000.zkey build/circuit_final.zkey --name="ZK_DIGSIG_KYC" -v
+   snarkjs zkey export verificationkey build/circuit_final.zkey build/verification_key.json
+
+5. Generate the Proof:
+   snarkjs groth16 prove build/circuit_final.zkey witness.wtns proof.json public.json
+
+6. Verify the Proof:
+   snarkjs groth16 verify build/verification_key.json public.json proof.json
+
+   If everything is correct, you should see: snarkJS: OK!
+
+7. Solidity code:
+   snarkjs zkey export solidityverifier build/circuit_final.zkey verifier.sol
+
+/*
+The Verifier has a view function called verifyProof that returns TRUE if and only if the proof and the inputs are valid. To facilitate the call, you can use snarkJS to generate the parameters of the call by typing:
+snarkjs generatecall
+Cut and paste the output of the command to the parameters field of the verifyProof method in Remix. If everything works fine, this method should return TRUE. You can try to change just a single bit of the parameters, and you will see that the result is verifiable FALSE.
+*/

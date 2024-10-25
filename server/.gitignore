@@ -1,0 +1,7 @@
+.env
+node_modules/
+temp/
+logs/
+dist/
+logs/
+/src/circuits/circom/

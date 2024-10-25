@@ -34,6 +34,7 @@
       "@services/*": ["./services/*.ts"],
       "@controllers/*": ["./controllers/*.ts"],
       "@utils/*": ["./utils/*.ts"],
+      "@utils": ["./utils/index.ts"],
       "@logger": ["./logger.ts"],
       "@config": ["./config"],
       "@routes": ["./routes/index.ts"]

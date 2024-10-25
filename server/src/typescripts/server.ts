@@ -47,7 +47,7 @@ class Server {
     //this.serveClient();
     const port = config.SERVER_PORT;
     this.server.listen(port, () => {
-      expressLogger.info(`Server started on port ${port}`);
+      expressLogger.info(`Server started on port: ${port}`);
       expressLogger.info(`Server version: v1.0`);
     });
   }
