@@ -1,6 +1,6 @@
 pragma circom 2.2.0;
 
-include "../../../node_modules/circomlib/circuits/sha256/sha256.circom"; // Ensure this path is correct based on your project structure
+include "circomlib/circuits/sha256/sha256.circom"; // Ensure this path is correct based on your project structure
 
 template FiscalCodeHash256Check(NUM_BITS) {
     // Private input: fiscal code represented as bits
@@ -11,7 +11,6 @@ template FiscalCodeHash256Check(NUM_BITS) {
 
     // Output: computed hash
     signal output computed_hash[256] <== Sha256(NUM_BITS)(fiscal_code_bits);
-
     computed_hash === expected_hash;
 }
 
