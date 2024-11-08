@@ -1,6 +1,6 @@
 pragma circom 2.1.5;
 
-include "zk-regex\\packages\\circom\\circuits\\regex_helpers.circom";
+include "@zk-email/zk-regex-circom/circuits/regex_helpers.circom";
 
 // regex: '([A-Za-z_]+?)':[a-zA-Z.(0]+\d{1,4}\,\d{1,2}\,\d{1,2}\,
 template SimpleRegex(msg_bytes) {
