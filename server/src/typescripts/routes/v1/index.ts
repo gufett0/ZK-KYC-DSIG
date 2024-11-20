@@ -4,8 +4,19 @@ import logger from "@logger";
 import Cryptography from "@utils/cryptography";
 import * as forge from "node-forge"; //TODO remove * as
 import path from "path";
+import fs from "fs";
 import * as circomlibjs from "circomlibjs"; //TODO remove * as
 import * as crypto from "crypto";
+import {
+  toCircomBigIntBytes,
+  bigIntToChunkedBytes,
+  bytesToBigInt,
+  bufferToUint8Array,
+  Uint8ArrayToCharArray,
+  sha256Pad,
+  CIRCOM_BIGINT_N,
+  CIRCOM_BIGINT_K,
+} from "@zk-email/helpers"; // assuming helper functions are imported
 
 const router = Router();
 
@@ -204,8 +215,108 @@ router.get("/hash256", async (req: Request, res: Response) => {
   });
 });
 
-router.get("/doc", async (req: Request, res: Response) => {
-  res.json({ message: "Hello World" });
+////////////////////////
+////////////////////////
+////////////////////////
+////////////////////////
+
+router.get("/verify_signature", async (req: Request, res: Response) => {
+  try {
+    // Define constants matching your circuit parameters
+    const MAX_SIGN_ATTRS_LENGTH = 1024; // Should match maxSignAttrsLength in your circuit
+    const N = 121; // Number of bits per chunk
+    const K = 17; // Number of chunks
+
+    // Ensure that N and K satisfy the circuit constraints
+    if (N * K <= 2048 || N >= 255 / 2) {
+      throw new Error("Invalid N and K values for the circuit constraints");
+    }
+
+    // Path to the certificate and PKCS#7 files
+    const certPath = path.join(__dirname, "../../temp/SAVINOMATTEO.cer");
+    const p7mPath = path.join(__dirname, "../../temp/prova.txt.p7m");
+
+    // Read and parse the certificate
+    const certData = fs.readFileSync(certPath);
+    const certDer = certData.toString("binary");
+    const certAsn1 = forge.asn1.fromDer(certDer);
+    const cert = forge.pki.certificateFromAsn1(certAsn1);
+    const publicKey = cert.publicKey as forge.pki.rsa.PublicKey;
+
+    // Extract the modulus (n) and exponent (e)
+    const modulus = BigInt(publicKey.n.toString(10));
+    const exponent = publicKey.e.toString(10);
+
+    if (exponent !== "65537") {
+      throw new Error("Public exponent is not 65537");
+    }
+
+    // Split the modulus into K chunks of N bits
+    const modulusChunks = bigIntToChunkedBytes(modulus, N, K);
+
+    // Read and parse the PKCS#7 signed data
+    const p7mData = fs.readFileSync(p7mPath);
+    const p7Der = p7mData.toString("binary");
+    const p7Asn1 = forge.asn1.fromDer(p7Der);
+    const p7 = forge.pkcs7.messageFromAsn1(p7Asn1) as forge.pkcs7.PkcsSignedData;
+
+    // Ensure that there is at least one signer
+    if (!p7 || !p7.signers || p7.signers.length === 0) {
+      throw new Error("Not a signed data message");
+    }
+
+    // Extract the signature and signed attributes
+    const signerInfo = p7.signers[0];
+    const signatureBytes = signerInfo.signature as string; // Byte string
+    const signatureHex = forge.util.bytesToHex(signatureBytes);
+    const signatureBigInt = BigInt("0x" + signatureHex);
+
+    // Split the signature into K chunks of N bits
+    const signatureChunks = bigIntToChunkedBytes(signatureBigInt, N, K);
+
+    // Extract signed attributes as bytes
+    const signedAttrsAsn1: forge.asn1.Asn1 = {
+      tagClass: forge.asn1.Class.CONTEXT_SPECIFIC,
+      type: 0, // Attributes are typically of type [0]
+      constructed: true,
+      value: signerInfo.authenticatedAttributes as forge.asn1.Asn1[],
+    };
+    const signedAttrsDer = forge.asn1.toDer(signedAttrsAsn1).getBytes();
+    const signedAttrsBytes = Uint8Array.from(signedAttrsDer, (c) => c.charCodeAt(0));
+
+    // Check signed attributes length
+    const signAttrsLength = signedAttrsBytes.length;
+    if (signAttrsLength > MAX_SIGN_ATTRS_LENGTH) {
+      throw new Error("Signed attributes length exceeds MAX_SIGN_ATTRS_LENGTH");
+    }
+
+    // Pad signed attributes to MAX_SIGN_ATTRS_LENGTH
+    const signAttrsPadded = new Uint8Array(MAX_SIGN_ATTRS_LENGTH);
+    signAttrsPadded.set(signedAttrsBytes);
+
+    // Convert signed attributes to array of integers
+    const signAttrsArray = Uint8ArrayToCharArray(signAttrsPadded);
+
+    // Convert modulus and signature chunks to strings
+    const modulusChunksStr = modulusChunks.map((chunk) => chunk.toString());
+    const signatureChunksStr = signatureChunks.map((chunk) => chunk.toString());
+
+    // Prepare the circuit input object
+    const circuitInput = {
+      signAttrs: signAttrsArray,
+      signAttrsLength: signAttrsLength.toString(),
+      signature: signatureChunksStr,
+      pubkey: modulusChunksStr,
+    };
+
+    // Return the circuit input as JSON
+    res.json(circuitInput);
+  } catch (err) {
+    console.error("Error generating circuit input:", err);
+    res.status(500).json({ error: err instanceof Error ? err.message : "Unknown error occurred" });
+  }
 });
+
+////////////////////////////
 
 export default router;

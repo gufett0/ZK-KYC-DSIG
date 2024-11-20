@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:circuit": "jest",
     "build": "tsc",
     "dev": "nodemon",
     "start": "node ./dist/main.js",
@@ -18,17 +18,27 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/chai": "^5.0.1",
     "@types/circomlibjs": "^0.1.6",
     "@types/cors": "^2.8.17",
     "@types/elliptic": "^6.4.18",
     "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.14",
+    "@types/mocha": "^10.0.9",
     "@types/node": "^22.7.5",
     "@types/node-forge": "^1.3.11",
+    "@zk-email/circuits": "^6.3.2",
+    "@zk-email/helpers": "^6.3.2",
+    "circom_tester": "^0.0.20",
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^12.0.2",
     "cross-env": "^7.0.3",
     "html-webpack-plugin": "^5.6.0",
+    "jest": "^29.7.0",
+    "mocha": "^10.8.2",
     "nodemon": "^3.1.7",
+    "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
@@ -38,8 +48,6 @@
     "webpack-dev-server": "^5.1.0"
   },
   "dependencies": {
-    "@zk-email/circuits": "^6.3.1",
-    "@zk-email/helpers": "^6.3.1",
     "circomlib": "^2.0.5",
     "circomlibjs": "^0.1.7",
     "cors": "^2.8.5",
@@ -53,6 +61,7 @@
     "node-forge": "^1.3.1",
     "node-pdftk": "^2.1.3",
     "pdf-lib": "^1.17.1",
+    "pem-ts": "^3.0.1",
     "snarkjs": "^0.7.4"
   }
 }

@@ -1,21 +1,21 @@
 pragma circom 2.2.0;
 
-include "@zk-email/circuits/lib/rsa.circom"; // Ensure this path matches your file structure
+// Adjust the import path according to your folder structure
+include "@zk-email/circuits/lib/rsa.circom";
 
-template RSAVerificationCircuit(n, k) {
-    // Define inputs
-    signal input fiscal_code[k];     // The message in chunks representing the fiscal code
-    signal input cipher_text[k];   // The RSA signature in chunks
-    signal input public_key[k]; // The modulus (public key) in chunks
+template FiscalCodeRsaCheck(w, nb) {
+    // Inputs
+    signal input fiscal_code[nb]; // Fiscal code (private input)
+    signal input cipher_text[nb];         // Encrypted fiscal code (public input)
+    signal input public_key[nb];          // RSA modulus N (public input)
+    
+    // Outputs
+    // Output of modular exponentiation
+    // Instantiate the PowerMod component with parameters
+    signal output cipher_text_out[nb] <== FpPow65537Mod(w, nb)(fiscal_code, public_key);
 
-   // Instantiate the RSAVerifier65537 component
-    component rsaVerifier = RSAVerifier65537(n, k);
-
-    // Connect the inputs to the component
-    rsaVerifier.message <== fiscal_code;
-    rsaVerifier.signature <== cipher_text;
-    rsaVerifier.modulus <== public_key;
+    cipher_text_out === cipher_text;
 }
 
-// Define main component with default parameters for n and k
-component main = RSAVerificationCircuit(64, 32);
+// Instantiate the main component with specified parameters
+component main {public [public_key]} = FiscalCodeRsaCheck(64, 32);
