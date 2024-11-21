@@ -1,5 +1,11 @@
 import Static from "@utils/static";
-import { Uint8ArrayToCharArray, toCircomBigIntBytes } from "@zk-email/helpers";
+import {
+  Uint8ArrayToCharArray,
+  Uint8ArrayToString,
+  bufferToString,
+  bufferToUint8Array,
+  toCircomBigIntBytes,
+} from "@zk-email/helpers";
 import { sha256Pad } from "@zk-email/helpers";
 import logger from "@logger";
 import fs from "fs";
@@ -59,19 +65,19 @@ export default class pkiHandler extends Static {
       //var contentData: string = pkcs7message.rawCapture.content.value[0].value.toString();
 
       //SIGNATURE
-      const signatureBase64: Base64 = pkcs7message.rawCapture.signature;
-      const signatureBigInt: BigInt = BigInt("0x" + Buffer.from(signatureBase64, "base64").toString("hex"));
+      const signatureBinaryString: string = pkcs7message.rawCapture.signature;
+      const signatureBigInt: BigInt = BigInt("0x" + Buffer.from(signatureBinaryString, "binary").toString("hex"));
       const signatureCircomBigIntBytes: string[] = toCircomBigIntBytes(signatureBigInt);
 
       //SIGNED ATTRIBUTES AND SIGNED ATTRUIBUTES LENGTH
-      const signedAttributesData = pkcs7message.rawCapture.authenticatedAttributes;
+      const signedAttributesBinaryData: string = pkcs7message.rawCapture.authenticatedAttributes;
       const signedAttributesAsn1Format: asn1.Asn1 = forge.asn1.create(
         forge.asn1.Class.UNIVERSAL,
         forge.asn1.Type.SET,
         true,
-        signedAttributesData
+        signedAttributesBinaryData
       );
-      const signedAttributes: Buffer = Buffer.from(asn1.toDer(signedAttributesAsn1Format).data);
+      const signedAttributes: Buffer = Buffer.from(asn1.toDer(signedAttributesAsn1Format).data, "binary"); //important that it is from binary
       const [signedAttributesPadded, signedAttributesPaddedLength] = sha256Pad(
         signedAttributes,
         maxSignAttributesLength
@@ -81,22 +87,34 @@ export default class pkiHandler extends Static {
 
       //Compute the hash of the signed attributes to them
       /*const signedAttributesBuffer = Buffer.from(asn1.toDer(signedAttributesAsn1Format).data, "binary");
-      const signedAttributes = signedAttributesBuffer;
       let hasher = crypto.createHash("SHA256");
       hasher.update(signedAttributesBuffer);
       const hash = hasher.digest("hex");
       console.log("hash: ", hash);*/
 
-      //PUBLIC KEY
-      const signerPublicKey = "";
-      /*const certificateBase64 = pkcs7message.rawCapture.certificates.value[0].value[2].value;
-      console.log(certificateBase64);
-      const certtificateAsn1: asn1.Asn1 = forge.asn1.create(
-        forge.asn1.Class.UNIVERSAL,
-        forge.asn1.Type.SET,
-        true,
-        certificateBase64
-      );*/
+      /////////////////////////////
+      // Assume 'publicKeyOptional' is your modulus as BigInt
+      const n = new forge.jsbn.BigInteger(publicKeyOptional.toString(16), 16);
+      // Public exponent (usually 65537)
+      const e = new forge.jsbn.BigInteger("10001", 16);
+      // Convert the signature string to a Forge BigInteger
+      const signatureBigIntXX = new forge.jsbn.BigInteger(
+        Buffer.from(signatureBinaryString, "binary").toString("hex"),
+        16
+      );
+      // Decrypt the signature
+      const decryptedSignature = signatureBigIntXX.modPow(e, n);
+      // Convert decrypted signature to a hexadecimal string
+      const decryptedHex = decryptedSignature.toString(16);
+      //console.log(signedAttributes.toString());
+      //console.log("Decrypted signature:", decryptedHex);
+      /////////////////////////////
+
+      //PUBLIC KEY TODO
+      const asd = pkcs7message.rawCapture.certificates.value[0].value[2].value;
+      const aa = Buffer.from(asd, "binary").toString("hex");
+      console.log("aa: ", aa.length);
+
       //const certificate: Buffer = Buffer.from(asn1.toDer(certtificateAsn1).data);
       let publicKey: BigInt = BigInt(0);
       if (publicKeyOptional !== BigInt(0)) {
@@ -107,8 +125,8 @@ export default class pkiHandler extends Static {
       var signedFileData: SignedFileData = {
         signature: signatureCircomBigIntBytes,
         publicKey: publicKeyCircomBigIntBytes,
-        signedAttributes: signedAttributesPaddedCharArray,
-        signedAttributesLength: signedAttributesPaddedLengthString,
+        signAttrs: signedAttributesPaddedCharArray,
+        signAttrsLength: signedAttributesPaddedLengthString,
       };
       return signedFileData;
     } catch (error) {
@@ -121,6 +139,6 @@ export default class pkiHandler extends Static {
 interface SignedFileData {
   signature: string[];
   publicKey: string[];
-  signedAttributes: string[];
-  signedAttributesLength: string;
+  signAttrs: string[];
+  signAttrsLength: string;
 }
