@@ -1,4 +1,5 @@
 import Static from "@utils/static";
+import * as asn1js from "asn1js";
 import {
   Uint8ArrayToCharArray,
   Uint8ArrayToString,
@@ -43,8 +44,13 @@ export default class pkiHandler extends Static {
       const asn1Object: forge.asn1.Asn1 = forge.asn1.fromDer(derBytes);
       const cert: forge.pki.Certificate = forge.pki.certificateFromAsn1(asn1Object);
 
+      //temp: print the certificate hash
+      /*let hasher = crypto.createHash("SHA256");
+      hasher.update(Buffer.from(asn1.toDer(asn1Object).data, "binary"));
+      const hash = hasher.digest("hex");
+      console.log("hash: ", hash);*/
+      //fine temp
       const publicKey: forge.pki.rsa.PublicKey = this.convertPemPublicKeyToPublicKeyObject(cert.publicKey);
-
       return publicKey.n.toString();
     } catch (err) {
       logger.error("Error extracting public key from DER certificate:", err);
@@ -64,11 +70,14 @@ export default class pkiHandler extends Static {
 
       //CONTENT
       var contentData: string = pkcs7message.rawCapture.content.value[0].value.toString();
+      console.log("contentData: ", contentData);
+      console.log(JSON.stringify(pkcs7message.rawCapture.content, null, 2));
       //console.log("contentData: ", Buffer.from(contentData, "ascii").toString("hex"));
 
       //SIGNATURE
       const signatureBinaryString: string = pkcs7message.rawCapture.signature;
       const signatureBigInt: BigInt = BigInt("0x" + Buffer.from(signatureBinaryString, "binary").toString("hex"));
+      console.log("signatureBigInt: ", signatureBigInt);
       const signatureCircomBigIntBytes: string[] = toCircomBigIntBytes(signatureBigInt);
 
       //SIGNED ATTRIBUTES AND SIGNED ATTRUIBUTES LENGTH
@@ -80,8 +89,10 @@ export default class pkiHandler extends Static {
         true,
         signedAttributesBinaryData
       );
-      printValues(signedAttributesAsn1Format);
+
+      //printValues(signedAttributesAsn1Format);
       //console.log(JSON.stringify(signedAttributesAsn1Format));
+
       const signedAttributesBuffer: Buffer = Buffer.from(asn1.toDer(signedAttributesAsn1Format).data, "binary"); //important that it is from binary
       const [signedAttributesPadded, signedAttributesPaddedLength] = sha256Pad(
         signedAttributesBuffer,
@@ -91,10 +102,10 @@ export default class pkiHandler extends Static {
       const signedAttributesPaddedLengthString: string = signedAttributesPaddedLength.toString();
 
       //Compute the hash of the signed attributes to them
-      /*let hasher = crypto.createHash("SHA256");
+      let hasher = crypto.createHash("SHA256");
       hasher.update(signedAttributesBuffer);
       const hash = hasher.digest("hex");
-      console.log("hash: ", hash);*/
+      console.log("hash: ", hash);
 
       ///////////////////////////// TO REMOVE
       // Assume 'publicKeyOptional' is your modulus as BigInt
@@ -117,9 +128,16 @@ export default class pkiHandler extends Static {
       //PUBLIC KEY TODO
       // Convert the certificates string to a binary buffer
       const certificatesBinaryString = pkcs7message.rawCapture.certificates;
-      //const certificatesBinaryBuffer = Buffer.from(certificatesBinaryString, "binary");
+      const pk: string = pkcs7message.rawCapture.data;
+      const pkdata = forge.asn1.create(forge.asn1.Class.UNIVERSAL, forge.asn1.Type.SEQUENCE, true, pk);
+      console.log("pkdata: ", JSON.stringify(pkdata, null, 2));
 
-      //console.log("asd: ", JSON.stringify(asd, null, 2));
+      // Encode the ASN.1 object to DER format
+
+      /*const certificatesBinaryBuffer = forge.asn1.fromDer(certificatesBinaryString);
+      const certificatesAsn1Format = asn1.toDer(certificatesBinaryBuffer).data;
+      const certificatesAsn1FormatBuffer = Buffer.from(certificatesAsn1Format, "binary");
+      console.log("asd: ", JSON.stringify(certificatesAsn1FormatBuffer.toString("ascii"), null, 2));*/
       // Parse the ASN.1 structure from the binary buffer
       //const certificatesAsn1Format = forge.asn1.fromDer(certificatesBinaryBuffer.toString("binary"));
 

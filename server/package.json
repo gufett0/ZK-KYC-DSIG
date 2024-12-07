@@ -48,6 +48,7 @@
     "webpack-dev-server": "^5.1.0"
   },
   "dependencies": {
+    "asn1js": "^3.0.5",
     "circomlib": "^2.0.5",
     "circomlibjs": "^0.1.7",
     "cors": "^2.8.5",
@@ -62,6 +63,8 @@
     "node-pdftk": "^2.1.3",
     "pdf-lib": "^1.17.1",
     "pem-ts": "^3.0.1",
+    "pkijs": "^3.2.4",
+    "pvutils": "^1.1.3",
     "snarkjs": "^0.7.4"
   }
 }

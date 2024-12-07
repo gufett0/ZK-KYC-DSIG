@@ -1,36 +1,36 @@
 {
-    "parts": [
-        {
-            "is_public": false,
-            "regex_def": "'([A-Za-z_]+?)':"
-        },
-        {
-            "is_public": false,
-            "regex_def": "[a-zA-Z.(0]+"
-        },
-        {
-            "is_public": true,
-            "regex_def": "\\d{1,4}"
-        },
-        {
-            "is_public": false,
-            "regex_def": "\\,"
-        },
-        {
-            "is_public": true,
-            "regex_def": "\\d{1,2}"
-        },
-        {
-            "is_public": false,
-            "regex_def": "\\,"
-        },
-        {
-            "is_public": true,
-            "regex_def": "\\d{1,2}"
-        },
-        {
-            "is_public": false,
-            "regex_def": "\\,"
-        }
-    ]
+  "parts": [
+    {
+      "is_public": false,
+      "regex_def": "'([A-Za-z_]+?)':"
+    },
+    {
+      "is_public": false,
+      "regex_def": "[a-zA-Z.(0]+"
+    },
+    {
+      "is_public": true,
+      "regex_def": "\\d{1,4}"
+    },
+    {
+      "is_public": false,
+      "regex_def": "\\,"
+    },
+    {
+      "is_public": true,
+      "regex_def": "\\d{1,2}"
+    },
+    {
+      "is_public": false,
+      "regex_def": "\\,"
+    },
+    {
+      "is_public": true,
+      "regex_def": "\\d{1,2}"
+    },
+    {
+      "is_public": false,
+      "regex_def": "\\,"
+    }
+  ]
 }

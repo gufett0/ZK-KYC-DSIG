@@ -1,6 +1,7 @@
 import Static from "@utils/static";
 import logger from "@logger";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
+import crypto from "crypto";
 export default class Common extends Static {
   constructor() {
     super();
@@ -31,5 +32,22 @@ export default class Common extends Static {
       logger.error(`Error reading file: ${error}`);
       return "";
     }
+  }
+
+  public static writeFile(filePath: string, data: string, encoding: BufferEncoding = "utf-8"): boolean {
+    try {
+      writeFileSync(filePath, data, { encoding });
+      logger.info(`File written successfully to ${filePath}`);
+      return true;
+    } catch (error) {
+      logger.error(`Error writing file: ${error}`);
+      return false;
+    }
+  }
+
+  public static hashString(input: string | Buffer): string {
+    let hasher = crypto.createHash("SHA256");
+    hasher.update(input);
+    return hasher.digest("hex");
   }
 }
