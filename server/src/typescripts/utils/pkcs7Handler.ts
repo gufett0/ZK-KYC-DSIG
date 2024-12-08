@@ -6,14 +6,14 @@ export interface Pkcs7Data {
   CaPublicKeyModulus: BigInt;
   Signature: BigInt;
   SignedAttributes: Buffer;
-  Content: string;
+  Content: Buffer;
   MessageDigest: Buffer;
   CertificateTbs: Buffer;
   CertificateSignature: BigInt;
+  Exponent: BigInt;
 }
 
 export default class Pkcs7Handler {
-  //private digestedInfo?: pkiLib.DigestInfo =undefined;
   private SignedFileBinaryBuffer!: Buffer;
   private CaCertBuffer!: Buffer;
   private FileAsn1Format!: asn1Lib.AsnType;
@@ -28,17 +28,20 @@ export default class Pkcs7Handler {
   private PublicKeyModulus!: BigInt;
   private SignedAttributesBuffer!: Buffer;
   private SignatureHexBigInt!: BigInt;
-  private Content!: string;
+  private Content!: Buffer;
   private MessageDigestBuffer!: Buffer;
   private CertificateTbsBuffer!: Buffer;
   private CertificateSignatureHexBigInt!: BigInt;
   private CaPublicKeyModulus!: BigInt;
+  private RsaExponent!: BigInt;
 
   /*
   //1-->SignedAttributes could be null since they are optional but they are very used so we assume they are always present
   //2-->eContent could be null since they are optional but they are very used so we assume they are always present
   //3-->Certificates contain the fiscal code in the form of (for example) TINIT-12345678901 where (TIN=Tax Identification Number, IT=Italy). I'll work only for italy but we could easily generalize it.
   //4-->I assume that the CA chain is composed of only 1 entity (the root CA) for simplicity. We could easily generalize it.
+  //5-->I assume that the signature is always RSA with SHA256. We could easily generalize it.
+  //6-->I assume that the key exponent is always fixed to 65537.
   */
 
   constructor(signedFileBinaryBuffer: Buffer, caCertBuffer: Buffer) {
@@ -66,6 +69,7 @@ export default class Pkcs7Handler {
     this.extractCertificateTbsBuffer();
     this.extractCertificateSignatureValue();
     this.extractCaPublicKeyModulus();
+    this.setRsaExponent();
   }
   private extractFileAsn1Format() {
     const fileAsn1Format = asn1Lib.fromBER(this.SignedFileBinaryBuffer);
@@ -196,7 +200,7 @@ export default class Pkcs7Handler {
       throw new Error("No eContent found from EncapsulatedContentInfo");
     }
     const contentArrayBuffer = this.EncapContentInfo.eContent.valueBlock.valueHexView;
-    this.Content = Buffer.from(contentArrayBuffer).toString("utf-8");
+    this.Content = Buffer.from(contentArrayBuffer);
   }
 
   private extractMessageDigestFromSignedAttributesFromArray(signedAttributesIndex: number = 0) {
@@ -241,6 +245,9 @@ export default class Pkcs7Handler {
       "0x" + Buffer.from(caRsaPublicKey.modulus.valueBlock.valueHexView).toString("hex")
     );
   }
+  private setRsaExponent() {
+    this.RsaExponent = 65537n;
+  }
   public getPkcs7DataForZkpKyc(): Pkcs7Data {
     return {
       PublicKeyModulus: this.PublicKeyModulus,
@@ -251,6 +258,7 @@ export default class Pkcs7Handler {
       MessageDigest: this.MessageDigestBuffer,
       CertificateTbs: this.CertificateTbsBuffer,
       CertificateSignature: this.CertificateSignatureHexBigInt,
+      Exponent: this.RsaExponent,
     };
   }
 }

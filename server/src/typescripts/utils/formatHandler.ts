@@ -8,22 +8,27 @@ import {
   bytesToString,
   toCircomBigIntBytes,
 } from "@zk-email/helpers";
+import { sha256Pad } from "@zk-email/helpers";
 
-/*export interface Pkcs7Data {
-  PublicKeyModulus: BigInt;
-  CaPublicKeyModulus: BigInt;
-  Signature: BigInt;
-  SignedAttributes: Buffer;
-  Content: string;
-  MessageDigest: Buffer;
-  CertificateTbs: Buffer;
-  CertificateSignature: BigInt;
-} */
+interface Pkcs7FormattedData {
+  PublicKeyModulus: string[];
+  CaPublicKeyModulus: string[];
+  Signature: string[];
+  CertificateSignature: string[];
+  SignedAttributes: string[];
+  SignedAttributesLength: string;
+  CertificateTbsLength: string;
+  Content: string[];
+  MessageDigest: string[];
+  CertificateTbs: string[];
+  Exponent: string;
+}
 
 export default class FormatHandler {
   private Data!: Pkcs7Data;
   private MaxSignAttributesLength!: number;
-  constructor(data: Pkcs7Data, maxSignAttributesByteLength: number) {
+  private MaxTbsLength!: number;
+  constructor(data: Pkcs7Data, maxSignAttributesByteLength: number, maxTbsByteLength: number) {
     if (data === null) {
       throw new Error("Data from signed file is null");
     }
@@ -31,12 +36,41 @@ export default class FormatHandler {
     if (maxSignAttributesByteLength < 64 || maxSignAttributesByteLength % 64 !== 0) {
       throw new Error("Invalid maxSignAttributesLength");
     }
+    if (maxTbsByteLength < 64 || maxTbsByteLength % 64 !== 0) {
+      throw new Error("Invalid maxTbsByteLength");
+    }
     this.Data = data;
     this.MaxSignAttributesLength = maxSignAttributesByteLength;
+    this.MaxTbsLength = maxTbsByteLength;
   }
-  public getFormattedDataForKzpCircuit() {
+  public getFormattedDataForKzpCircuit(): Pkcs7FormattedData {
     const publicKeyModulus: string[] = toCircomBigIntBytes(this.Data.PublicKeyModulus);
-    return { asd: "" };
+    const caPublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.CaPublicKeyModulus);
+    const signature: string[] = toCircomBigIntBytes(this.Data.Signature);
+    const certificateSignature: string[] = toCircomBigIntBytes(this.Data.CertificateSignature);
+    const [signedAttributesPadded, signedAttributesPaddedLength] = sha256Pad(
+      this.Data.SignedAttributes,
+      this.MaxSignAttributesLength
+    );
+    const signedAttributesPaddedString: string[] = Uint8ArrayToCharArray(signedAttributesPadded);
+    const [certificateTbsPadded, certificateTbsPaddedLength] = sha256Pad(this.Data.CertificateTbs, this.MaxTbsLength);
+    const certificateTbsPaddedString: string[] = Uint8ArrayToCharArray(certificateTbsPadded);
+    const messageDigest: string[] = Uint8ArrayToCharArray(this.Data.MessageDigest);
+    const content: string[] = Uint8ArrayToCharArray(this.Data.Content);
+    const exponent: string = this.Data.Exponent.toString();
+    return {
+      PublicKeyModulus: publicKeyModulus,
+      CaPublicKeyModulus: caPublicKeyModulus,
+      Signature: signature,
+      CertificateSignature: certificateSignature,
+      SignedAttributes: signedAttributesPaddedString,
+      SignedAttributesLength: signedAttributesPaddedLength.toString(),
+      CertificateTbs: certificateTbsPaddedString,
+      CertificateTbsLength: certificateTbsPaddedLength.toString(),
+      MessageDigest: messageDigest,
+      Content: content,
+      Exponent: exponent,
+    };
   }
 }
 
@@ -44,3 +78,5 @@ const a = new pkcs7data(
   Common.readFileToBinaryBuffer("../temp/prova.txt.p7m"),
   Common.readFileToBinaryBuffer("../temp/PosteItalianeEUQualifiedCertificatesCA.crt")
 );
+const b = new FormatHandler(a.getPkcs7DataForZkpKyc(), 512, 2048);
+console.log(JSON.stringify(b.getFormattedDataForKzpCircuit()));
