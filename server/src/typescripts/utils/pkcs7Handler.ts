@@ -1,6 +1,5 @@
 import * as asn1Lib from "asn1js";
 import * as pkiLib from "pkijs";
-
 export interface Pkcs7Data {
   PublicKeyModulus: BigInt;
   CaPublicKeyModulus: BigInt;
@@ -11,6 +10,7 @@ export interface Pkcs7Data {
   CertificateTbs: Buffer;
   CertificateSignature: BigInt;
   Exponent: BigInt;
+  JudgePublicKeyModulus: BigInt;
 }
 
 export default class Pkcs7Handler {
@@ -24,6 +24,7 @@ export default class Pkcs7Handler {
   private SignerInfos!: pkiLib.SignerInfo[];
   private Signatures!: asn1Lib.OctetString[];
   private SignedAttributes!: pkiLib.SignedAndUnsignedAttributes[];
+  private JudgePublicKeyPem!: string;
   //Prepared data:
   private PublicKeyModulus!: BigInt;
   private SignedAttributesBuffer!: Buffer;
@@ -34,6 +35,7 @@ export default class Pkcs7Handler {
   private CertificateSignatureHexBigInt!: BigInt;
   private CaPublicKeyModulus!: BigInt;
   private RsaExponent!: BigInt;
+  private JudgePublicKeyModulus!: BigInt;
 
   /*
   //1-->SignedAttributes could be null since they are optional but they are very used so we assume they are always present
@@ -44,15 +46,20 @@ export default class Pkcs7Handler {
   //6-->I assume that the key exponent is always fixed to 65537.
   */
 
-  constructor(signedFileBinaryBuffer: Buffer, caCertBuffer: Buffer) {
+  constructor(signedFileBinaryBuffer: Buffer, caCertBuffer: Buffer, judgePublicKeyPem: string) {
     if (!signedFileBinaryBuffer || signedFileBinaryBuffer.length === 0) {
       throw new Error("Invalid or empty file buffer provided");
     }
     if (!caCertBuffer || caCertBuffer.length === 0) {
       throw new Error("Invalid or empty CA certificate buffer provided");
     }
+    if (!judgePublicKeyPem || judgePublicKeyPem.length === 0) {
+      throw new Error("Invalid or empty Judge public key pem string provided");
+    }
     this.SignedFileBinaryBuffer = signedFileBinaryBuffer;
     this.CaCertBuffer = caCertBuffer;
+    this.JudgePublicKeyPem = judgePublicKeyPem;
+    //Function calls
     this.extractFileAsn1Format();
     this.extractContentInfo();
     this.extractSignedData();
@@ -70,6 +77,7 @@ export default class Pkcs7Handler {
     this.extractCertificateSignatureValue();
     this.extractCaPublicKeyModulus();
     this.setRsaExponent();
+    this.extractJudgePublicKeyModulus();
   }
   private extractFileAsn1Format() {
     const fileAsn1Format = asn1Lib.fromBER(this.SignedFileBinaryBuffer);
@@ -220,6 +228,7 @@ export default class Pkcs7Handler {
   }
   private extractCertificateTbsBuffer() {
     this.CertificateTbsBuffer = Buffer.from(this.Certificates[0].tbsView);
+    console.log("CertificateTbsBuffer: ", this.CertificateTbsBuffer.toString("hex"));
   }
   private extractCertificateSignatureValue() {
     this.CertificateSignatureHexBigInt = BigInt(
@@ -248,6 +257,14 @@ export default class Pkcs7Handler {
   private setRsaExponent() {
     this.RsaExponent = 65537n;
   }
+  private extractJudgePublicKeyModulus() {
+    const pem: string = this.JudgePublicKeyPem.replace(
+      /-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\n|\r/g,
+      ""
+    );
+    this.JudgePublicKeyModulus = BigInt("0x" + Buffer.from(pem, "base64").toString("hex"));
+  }
+
   public getPkcs7DataForZkpKyc(): Pkcs7Data {
     return {
       PublicKeyModulus: this.PublicKeyModulus,
@@ -259,6 +276,7 @@ export default class Pkcs7Handler {
       CertificateTbs: this.CertificateTbsBuffer,
       CertificateSignature: this.CertificateSignatureHexBigInt,
       Exponent: this.RsaExponent,
+      JudgePublicKeyModulus: this.JudgePublicKeyModulus,
     };
   }
 }

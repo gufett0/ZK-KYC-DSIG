@@ -13,6 +13,7 @@ import { sha256Pad } from "@zk-email/helpers";
 interface Pkcs7FormattedData {
   PublicKeyModulus: string[];
   CaPublicKeyModulus: string[];
+  JudgePublicKeyModulus: string[];
   Signature: string[];
   CertificateSignature: string[];
   SignedAttributes: string[];
@@ -58,9 +59,11 @@ export default class FormatHandler {
     const messageDigest: string[] = Uint8ArrayToCharArray(this.Data.MessageDigest);
     const content: string[] = Uint8ArrayToCharArray(this.Data.Content);
     const exponent: string = this.Data.Exponent.toString();
+    const judgePublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.JudgePublicKeyModulus);
     return {
       PublicKeyModulus: publicKeyModulus,
       CaPublicKeyModulus: caPublicKeyModulus,
+      JudgePublicKeyModulus: judgePublicKeyModulus,
       Signature: signature,
       CertificateSignature: certificateSignature,
       SignedAttributes: signedAttributesPaddedString,
@@ -75,8 +78,8 @@ export default class FormatHandler {
 }
 
 const a = new pkcs7data(
-  Common.readFileToBinaryBuffer("../temp/prova.txt.p7m"),
-  Common.readFileToBinaryBuffer("../temp/PosteItalianeEUQualifiedCertificatesCA.crt")
+  Common.readFileToBinaryBuffer("../../files/prova.txt.p7m"),
+  Common.readFileToBinaryBuffer("../../files/PosteItalianeEUQualifiedCertificatesCA.cer"),
+  Common.readFileToBinaryString("../../files/JudgePublicKey.pem")
 );
 const b = new FormatHandler(a.getPkcs7DataForZkpKyc(), 512, 2048);
-console.log(JSON.stringify(b.getFormattedDataForKzpCircuit()));
