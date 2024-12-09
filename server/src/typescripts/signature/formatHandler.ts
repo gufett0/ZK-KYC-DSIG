@@ -1,6 +1,6 @@
 import Common from "@utils/common";
 import pkcs7data, { Pkcs7Data } from "@signature/pkcs7Handler";
-import { Uint8ArrayToCharArray, toCircomBigIntBytes } from "@zk-email/helpers";
+import { Uint8ArrayToCharArray, bigIntToChunkedBytes, toCircomBigIntBytes } from "@zk-email/helpers";
 import { sha256Pad } from "@zk-email/helpers";
 
 interface Pkcs7FormattedData {
@@ -22,6 +22,8 @@ export default class FormatHandler {
   private Data!: Pkcs7Data;
   private MaxSignAttributesLength!: number;
   private MaxTbsLength!: number;
+  CIRCOM_BIGINT_N = 242; //bits per chunk
+  CIRCOM_BIGINT_K = 17; //number of chunks
   constructor(data: Pkcs7Data, maxSignAttributesByteLength: number, maxTbsByteLength: number) {
     if (data === null) {
       throw new Error("Data from signed file is null");
@@ -38,10 +40,19 @@ export default class FormatHandler {
     this.MaxTbsLength = maxTbsByteLength;
   }
   public getFormattedDataForKzpCircuit(): Pkcs7FormattedData {
+    //Obs: toCircomBigIntBytes is equivalent to bigIntToChunkedBytes with values CIRCOM_BIGINT_N = 121 and CIRCOM_BIGINT_K = 17
     const publicKeyModulus: string[] = toCircomBigIntBytes(this.Data.PublicKeyModulus);
-    const caPublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.CaPublicKeyModulus);
+    const caPublicKeyModulus: string[] = bigIntToChunkedBytes(
+      this.Data.CaPublicKeyModulus,
+      this.CIRCOM_BIGINT_N,
+      this.CIRCOM_BIGINT_K
+    );
     const signature: string[] = toCircomBigIntBytes(this.Data.Signature);
-    const certificateSignature: string[] = toCircomBigIntBytes(this.Data.CertificateSignature);
+    const certificateSignature: string[] = bigIntToChunkedBytes(
+      this.Data.CertificateSignature,
+      this.CIRCOM_BIGINT_N,
+      this.CIRCOM_BIGINT_K
+    );
     const [signedAttributesPadded, signedAttributesPaddedLength] = sha256Pad(
       this.Data.SignedAttributes,
       this.MaxSignAttributesLength
@@ -76,3 +87,4 @@ const a = new pkcs7data(
   Common.readFileToBinaryString("../../files/JudgePublicKey.pem")
 );
 const b = new FormatHandler(a.getPkcs7DataForZkpKyc(), 512, 2048);
+Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));

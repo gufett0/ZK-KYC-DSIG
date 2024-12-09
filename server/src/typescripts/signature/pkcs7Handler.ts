@@ -228,7 +228,6 @@ export default class Pkcs7Handler {
   }
   private extractCertificateTbsBuffer() {
     this.CertificateTbsBuffer = Buffer.from(this.Certificates[0].tbsView);
-    console.log("CertificateTbsBuffer: ", this.CertificateTbsBuffer.toString("hex"));
   }
   private extractCertificateSignatureValue() {
     this.CertificateSignatureHexBigInt = BigInt(
