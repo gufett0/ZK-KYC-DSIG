@@ -1,13 +1,6 @@
 import Common from "@utils/common";
-import pkcs7data, { Pkcs7Data } from "@utils/pkcs7Handler";
-import {
-  Uint8ArrayToCharArray,
-  Uint8ArrayToString,
-  bufferToString,
-  bufferToUint8Array,
-  bytesToString,
-  toCircomBigIntBytes,
-} from "@zk-email/helpers";
+import pkcs7data, { Pkcs7Data } from "@signature/pkcs7Handler";
+import { Uint8ArrayToCharArray, toCircomBigIntBytes } from "@zk-email/helpers";
 import { sha256Pad } from "@zk-email/helpers";
 
 interface Pkcs7FormattedData {

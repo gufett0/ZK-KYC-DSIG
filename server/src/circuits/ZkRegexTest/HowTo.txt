@@ -1,5 +1,5 @@
 1 -->Use: 
-    yarn install
+    npm install
     It install the dependencies.
 
 2 --> Run:

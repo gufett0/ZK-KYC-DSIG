@@ -1,4 +1,4 @@
--->Run the GenerateProofAndVerifyIt.ps1 (from the server folder) file to launch all the commands together.
+-->Run the GenerateProofAndVerifyIt.ps1 (from the server folder) file to launch all the commands listed in this file together.
 -->Otherwise run them manually 1 by 1 following the list below.
 
 -->Command: .\GenerateProofAndVerifyIt.ps1  -CircuitName "circuit_name" -CircuitDir ".\src\circuits\CircuitFolder\"

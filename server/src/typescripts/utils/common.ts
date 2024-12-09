@@ -2,6 +2,8 @@ import Static from "@utils/static";
 import logger from "@logger";
 import { readFileSync, writeFileSync } from "fs";
 import crypto from "crypto";
+import forge from "node-forge";
+
 export default class Common extends Static {
   constructor() {
     super();
@@ -49,5 +51,46 @@ export default class Common extends Static {
     let hasher = crypto.createHash("SHA256");
     hasher.update(input);
     return hasher.digest("hex");
+  }
+
+  public static getPubKeyModulusFromPemCertificate(pemFormatCertificateString: string): string {
+    try {
+      const publicKey: forge.pki.rsa.PublicKey = forge.pki.publicKeyFromPem(
+        forge.pki.publicKeyToPem(forge.pki.certificateFromPem(pemFormatCertificateString).publicKey).toString()
+      );
+      return publicKey.n.toString();
+    } catch (err) {
+      logger.error("Error extracting public key from PEM certificate:", err);
+      return "";
+    }
+  }
+
+  public static generateRSAKeyPair() {
+    const keyPair = forge.pki.rsa.generateKeyPair({
+      bits: 2048,
+      e: 0x10001,
+    });
+    const publicKeyPem = forge.pki.publicKeyToPem(keyPair.publicKey);
+    const privateKeyAsn1 = forge.pki.privateKeyToAsn1(keyPair.privateKey);
+    const privateKeyPkcs8Asn1 = forge.pki.wrapRsaPrivateKey(privateKeyAsn1);
+    const privateKeyPkcs8Pem = forge.pki.privateKeyInfoToPem(privateKeyPkcs8Asn1);
+
+    return {
+      publicKey: publicKeyPem,
+      privateKey: privateKeyPkcs8Pem,
+    };
+  }
+
+  public static writeKeyPairToDisk(publicKeyPath: string, privateKeyPath: string) {
+    const { publicKey, privateKey } = this.generateRSAKeyPair();
+    try {
+      Common.writeFile(publicKeyPath, publicKey, "utf8");
+      logger.info(`Public key written to ${publicKeyPath}`);
+
+      Common.writeFile(privateKeyPath, privateKey, "utf8");
+      logger.info(`Private key written to ${privateKeyPath}`);
+    } catch (error) {
+      logger.error("Error writing keys to disk:", error);
+    }
   }
 }
