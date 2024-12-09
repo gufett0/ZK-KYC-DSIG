@@ -82,9 +82,9 @@ export default class FormatHandler {
 }
 
 const a = new pkcs7data(
-  Common.readFileToBinaryBuffer("../../files/prova.txt.p7m"),
+  Common.readFileToBinaryBuffer("../../files/kyc.txt.p7m"),
   Common.readFileToBinaryBuffer("../../files/PosteItalianeEUQualifiedCertificatesCA.cer"),
   Common.readFileToBinaryString("../../files/JudgePublicKey.pem")
 );
 const b = new FormatHandler(a.getPkcs7DataForZkpKyc(), 512, 2048);
-Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));
+//Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));
