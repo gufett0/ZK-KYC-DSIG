@@ -38,12 +38,13 @@ export default class Pkcs7Handler {
   private JudgePublicKeyModulus!: BigInt;
 
   /*
-  //1-->SignedAttributes could be null since they are optional but they are very used so we assume they are always present
-  //2-->eContent could be null since they are optional but they are very used so we assume they are always present
+  //1-->SignedAttributes could be null since they are optional but they are very used so we assume they are always present.
+  //2-->eContent could be null since they are optional but they are very used so we assume they are always present.
   //3-->Certificates contain the fiscal code in the form of (for example) TINIT-12345678901 where (TIN=Tax Identification Number, IT=Italy). I'll work only for italy but we could easily generalize it.
   //4-->I assume that the CA chain is composed of only 1 entity (the root CA) for simplicity. We could easily generalize it.
   //5-->I assume that the signature is always RSA with SHA256. We could easily generalize it.
   //6-->I assume that the key exponent is always fixed to 65537.
+  //7-->I assume that the public keys are always RSA 2048 bits. Circom does not support other key lengths for RSA. We could generalize using another technology.
   */
 
   constructor(signedFileBinaryBuffer: Buffer, caCertBuffer: Buffer, judgePublicKeyPem: string) {

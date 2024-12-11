@@ -4,26 +4,25 @@ import { Uint8ArrayToCharArray, bigIntToChunkedBytes, toCircomBigIntBytes } from
 import { sha256Pad } from "@zk-email/helpers";
 
 interface Pkcs7FormattedData {
-  PublicKeyModulus: string[];
-  CaPublicKeyModulus: string[];
-  JudgePublicKeyModulus: string[];
-  Signature: string[];
-  CertificateSignature: string[];
   SignedAttributes: string[];
   SignedAttributesLength: string;
-  CertificateTbsLength: string;
-  Content: string[];
-  MessageDigest: string[];
+  Signature: string[];
+  PublicKeyModulus: string[];
   CertificateTbs: string[];
-  Exponent: string;
+  CertificateTbsLength: string;
+  CertificateSignature: string[];
+  CaPublicKeyModulus: string[];
+  JudgePublicKeyModulus: string[];
+  MessageDigest: string[];
+  //Content: string[];
+  //ContentLength: string; //32 bytes - 2048 bits
 }
 
 export default class FormatHandler {
   private Data!: Pkcs7Data;
   private MaxSignAttributesLength!: number;
   private MaxTbsLength!: number;
-  CIRCOM_BIGINT_N = 242; //bits per chunk
-  CIRCOM_BIGINT_K = 17; //number of chunks
+
   constructor(data: Pkcs7Data, maxSignAttributesByteLength: number, maxTbsByteLength: number) {
     if (data === null) {
       throw new Error("Data from signed file is null");
@@ -40,19 +39,10 @@ export default class FormatHandler {
     this.MaxTbsLength = maxTbsByteLength;
   }
   public getFormattedDataForKzpCircuit(): Pkcs7FormattedData {
-    //Obs: toCircomBigIntBytes is equivalent to bigIntToChunkedBytes with values CIRCOM_BIGINT_N = 121 and CIRCOM_BIGINT_K = 17
     const publicKeyModulus: string[] = toCircomBigIntBytes(this.Data.PublicKeyModulus);
-    const caPublicKeyModulus: string[] = bigIntToChunkedBytes(
-      this.Data.CaPublicKeyModulus,
-      this.CIRCOM_BIGINT_N,
-      this.CIRCOM_BIGINT_K
-    );
+    const caPublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.CaPublicKeyModulus);
     const signature: string[] = toCircomBigIntBytes(this.Data.Signature);
-    const certificateSignature: string[] = bigIntToChunkedBytes(
-      this.Data.CertificateSignature,
-      this.CIRCOM_BIGINT_N,
-      this.CIRCOM_BIGINT_K
-    );
+    const certificateSignature: string[] = toCircomBigIntBytes(this.Data.CertificateSignature);
     const [signedAttributesPadded, signedAttributesPaddedLength] = sha256Pad(
       this.Data.SignedAttributes,
       this.MaxSignAttributesLength
@@ -61,30 +51,32 @@ export default class FormatHandler {
     const [certificateTbsPadded, certificateTbsPaddedLength] = sha256Pad(this.Data.CertificateTbs, this.MaxTbsLength);
     const certificateTbsPaddedString: string[] = Uint8ArrayToCharArray(certificateTbsPadded);
     const messageDigest: string[] = Uint8ArrayToCharArray(this.Data.MessageDigest);
-    const content: string[] = Uint8ArrayToCharArray(this.Data.Content);
+    //const content: string[] = Uint8ArrayToCharArray(this.Data.Content);
     const exponent: string = this.Data.Exponent.toString();
     const judgePublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.JudgePublicKeyModulus);
+    //const ContentLength = this.Data.Content.length.toString();
     return {
-      PublicKeyModulus: publicKeyModulus,
-      CaPublicKeyModulus: caPublicKeyModulus,
-      JudgePublicKeyModulus: judgePublicKeyModulus,
-      Signature: signature,
-      CertificateSignature: certificateSignature,
       SignedAttributes: signedAttributesPaddedString,
       SignedAttributesLength: signedAttributesPaddedLength.toString(),
+      Signature: signature,
+      PublicKeyModulus: publicKeyModulus,
       CertificateTbs: certificateTbsPaddedString,
       CertificateTbsLength: certificateTbsPaddedLength.toString(),
+      CertificateSignature: certificateSignature,
+      CaPublicKeyModulus: caPublicKeyModulus,
+      JudgePublicKeyModulus: judgePublicKeyModulus,
       MessageDigest: messageDigest,
-      Content: content,
-      Exponent: exponent,
+      //Content: content,
+      //ContentLength: ContentLength,
     };
   }
 }
 
 const a = new pkcs7data(
   Common.readFileToBinaryBuffer("../../files/kyc.txt.p7m"),
-  Common.readFileToBinaryBuffer("../../files/PosteItalianeEUQualifiedCertificatesCA.cer"),
+  Common.readFileToBinaryBuffer("../../files/ArubaPECS.p.A.NGCA3.cer"),
   Common.readFileToBinaryString("../../files/JudgePublicKey.pem")
 );
+//console.log(a.getPkcs7DataForZkpKyc().PublicKeyModulus.toString());
 const b = new FormatHandler(a.getPkcs7DataForZkpKyc(), 512, 2048);
-//Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));
+Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));
