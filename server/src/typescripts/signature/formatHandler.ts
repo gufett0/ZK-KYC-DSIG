@@ -13,7 +13,7 @@ interface Pkcs7FormattedData {
   CertificateSignature: string[];
   CaPublicKeyModulus: string[];
   JudgePublicKeyModulus: string[];
-  MessageDigest: string[];
+  MessageDigestPatternStartingIndex: string;
   //Content: string[];
   //ContentLength: string; //32 bytes - 2048 bits
 }
@@ -38,6 +38,18 @@ export default class FormatHandler {
     this.MaxSignAttributesLength = maxSignAttributesByteLength;
     this.MaxTbsLength = maxTbsByteLength;
   }
+  private extractMessageDigestPatternStartingIndex(signedAttributesPaddedString: string[]): number {
+    let messageDigestPattern = [6, 9, 42, 134, 72, 134, 247, 13, 1, 9, 4, 49, 34, 4, 32];
+
+    const sigendAttributes = signedAttributesPaddedString.map(Number);
+
+    return sigendAttributes.findIndex(
+      (_, i) =>
+        i + messageDigestPattern.length <= sigendAttributes.length &&
+        messageDigestPattern.every((patternValue, j) => sigendAttributes[i + j] === patternValue)
+    );
+  }
+
   public getFormattedDataForKzpCircuit(): Pkcs7FormattedData {
     const publicKeyModulus: string[] = toCircomBigIntBytes(this.Data.PublicKeyModulus);
     const caPublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.CaPublicKeyModulus);
@@ -51,6 +63,9 @@ export default class FormatHandler {
     const [certificateTbsPadded, certificateTbsPaddedLength] = sha256Pad(this.Data.CertificateTbs, this.MaxTbsLength);
     const certificateTbsPaddedString: string[] = Uint8ArrayToCharArray(certificateTbsPadded);
     const messageDigest: string[] = Uint8ArrayToCharArray(this.Data.MessageDigest);
+    console.log(messageDigest.length);
+    const messageDigestPatternStartingIndex: string =
+      this.extractMessageDigestPatternStartingIndex(signedAttributesPaddedString).toString();
     //const content: string[] = Uint8ArrayToCharArray(this.Data.Content);
     const exponent: string = this.Data.Exponent.toString();
     const judgePublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.JudgePublicKeyModulus);
@@ -65,7 +80,7 @@ export default class FormatHandler {
       CertificateSignature: certificateSignature,
       CaPublicKeyModulus: caPublicKeyModulus,
       JudgePublicKeyModulus: judgePublicKeyModulus,
-      MessageDigest: messageDigest,
+      MessageDigestPatternStartingIndex: messageDigestPatternStartingIndex.toString(),
       //Content: content,
       //ContentLength: ContentLength,
     };
@@ -77,6 +92,6 @@ const a = new pkcs7data(
   Common.readFileToBinaryBuffer("../../files/ArubaPECS.p.A.NGCA3.cer"),
   Common.readFileToBinaryString("../../files/JudgePublicKey.pem")
 );
-//console.log(a.getPkcs7DataForZkpKyc().PublicKeyModulus.toString());
 const b = new FormatHandler(a.getPkcs7DataForZkpKyc(), 512, 2048);
-Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));
+b.getFormattedDataForKzpCircuit();
+//Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));

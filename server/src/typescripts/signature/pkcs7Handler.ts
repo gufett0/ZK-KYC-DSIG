@@ -87,14 +87,12 @@ export default class Pkcs7Handler {
     }
     this.FileAsn1Format = fileAsn1Format.result;
   }
-
   private extractContentInfo() {
     this.ContentInfo = new pkiLib.ContentInfo({ schema: this.FileAsn1Format });
     if (!this.ContentInfo) {
       throw new Error("Failed to decode ContentInfo structure");
     }
   }
-
   private extractSignedData() {
     if (this.ContentInfo.contentType !== "1.2.840.113549.1.7.2") {
       throw new Error("Not a valid SignedData structure");
@@ -104,7 +102,6 @@ export default class Pkcs7Handler {
       throw new Error("Failed to decode SignedData structure");
     }
   }
-
   private extractCertificates() {
     this.Certificates = [];
     const certificates: pkiLib.Certificate[] = [];
@@ -116,14 +113,12 @@ export default class Pkcs7Handler {
       this.Certificates.push(certificate as pkiLib.Certificate);
     }
   }
-
   private extractEncapContentInfo() {
     if (!this.SignedData.encapContentInfo) {
       throw new Error("Failed to extract EncapsulatedContentInfo from SignedData");
     }
     this.EncapContentInfo = this.SignedData.encapContentInfo;
   }
-
   private extractSignerInfos() {
     this.SignerInfos = [];
     if (!this.SignedData.signerInfos || this.SignedData.signerInfos.length === 0) {
@@ -133,7 +128,6 @@ export default class Pkcs7Handler {
       this.SignerInfos.push(new pkiLib.SignerInfo(signerInfo));
     }
   }
-
   private extractSignatureAndSignedAttributes() {
     this.Signatures = [];
     this.SignedAttributes = [];
@@ -152,11 +146,9 @@ export default class Pkcs7Handler {
       this.SignedAttributes.push(new pkiLib.SignedAndUnsignedAttributes(signerInfo.signedAttrs));
     }
   }
-
   private extractPublicKeyModulusBigInt() {
     this.PublicKeyModulus = this.extractPublicKeyModulusBigIntFromCertificate(0);
   }
-
   private extractPublicKeyModulusBigIntFromCertificate(certIndex: number = 0) {
     if (this.Certificates.length <= certIndex) {
       throw new Error("No certificates found in the P7M for certIndex: " + certIndex + ".");
@@ -171,11 +163,9 @@ export default class Pkcs7Handler {
     const modulusHex = Buffer.from(modulusBuffer).toString("hex");
     return BigInt("0x" + modulusHex);
   }
-
   private extractSignedAttributesBuffer() {
     this.SignedAttributesBuffer = this.extractSignedAttributesBufferFromArray();
   }
-
   private extractSignedAttributesBufferFromArray(signedAttributesIndex: number = 0) {
     if (this.SignedAttributes.length <= signedAttributesIndex) {
       throw new Error("No signed attributes found for signedAttributesIndex: " + signedAttributesIndex + ".");
@@ -187,7 +177,6 @@ export default class Pkcs7Handler {
     const signedAttributesDER = signedAttributesAsn1.toBER(false);
     return Buffer.from(signedAttributesDER);
   }
-
   private extractSignatureHexBigIntFromArray(signatureIndex: number = 0) {
     if (this.Signatures.length <= signatureIndex) {
       throw new Error("No signature found for signatureIndex: " + signatureIndex + ".");
@@ -199,11 +188,9 @@ export default class Pkcs7Handler {
     const signatureBigInt = BigInt("0x" + Buffer.from(signatureValueHex).toString("hex"));
     return signatureBigInt;
   }
-
   private extractSignatureHexBigInt() {
     this.SignatureHexBigInt = this.extractSignatureHexBigIntFromArray();
   }
-
   private extractContent() {
     if (!this.EncapContentInfo.eContent) {
       throw new Error("No eContent found from EncapsulatedContentInfo");
@@ -211,7 +198,6 @@ export default class Pkcs7Handler {
     const contentArrayBuffer = this.EncapContentInfo.eContent.valueBlock.valueHexView;
     this.Content = Buffer.from(contentArrayBuffer);
   }
-
   private extractMessageDigestFromSignedAttributesFromArray(signedAttributesIndex: number = 0) {
     let messageDigest: Buffer | null = null;
     this.SignedAttributes[signedAttributesIndex].attributes.forEach((attr) => {

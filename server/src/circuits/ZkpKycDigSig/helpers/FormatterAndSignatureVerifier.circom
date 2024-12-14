@@ -1,15 +1,14 @@
 pragma circom 2.2.0;
 
-include "@zk-email/circuits/lib/rsa.circom"; // Ensure this path matches your file structure
-include "@zk-email/circuits/lib/base64.circom";
 include "@zk-email/circuits/lib/rsa.circom";
-include "@zk-email/circuits/lib/sha.circom";
 include "@zk-email/circuits/utils/array.circom";
-include "@zk-email/circuits/utils/regex.circom";
 include "@zk-email/circuits/utils/hash.circom";
 include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
+include "./Hash.circom";
 
+//DONE
+//Code similar to the one used at the beginning of zk-email email-verifier.circom
 template FormatterAndSignatureVerifier(maxDataLength, keyLength, chunksBitLength, totalChunksNumber) {
     assert(maxDataLength % 64 == 0);
     assert(chunksBitLength * totalChunksNumber > keyLength);
@@ -20,12 +19,7 @@ template FormatterAndSignatureVerifier(maxDataLength, keyLength, chunksBitLength
     signal input signature[totalChunksNumber];
     signal input publicKey[totalChunksNumber];
 
-    component n2bDataLength = Num2Bits(log2Ceil(maxDataLength));
-    n2bDataLength.in <== dataLength;
-
-    AssertZeroPadding(maxDataLength)(data, dataLength);
-
-    signal output sha[256] <== Sha256Bytes(maxDataLength)(data, dataLength);
+    signal output sha[256] <== Hash(maxDataLength)(data, dataLength);
 
     var rsaMessageSize = (256 + chunksBitLength) \ chunksBitLength;
     component rsaMessage[rsaMessageSize];
