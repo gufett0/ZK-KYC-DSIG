@@ -7,15 +7,15 @@ include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
 
 //DONE
-template Hash(maxBytesLength) {
+template HashPadded(maxBytesLength) {
     signal input paddedBytes[maxBytesLength];
     signal input paddedBytesLength;
 
     //Assertions
     component n2bBytesLength = Num2Bits(log2Ceil(maxBytesLength));
     n2bBytesLength.in <== paddedBytesLength;
-    assert(maxByteLength > paddedBytesLength);
-    AssertZeroPadding(maxByteLength)(paddedBytes, paddedBytesLength);
+    assert(maxBytesLength > paddedBytesLength);
+    AssertZeroPadding(maxBytesLength)(paddedBytes, paddedBytesLength);
 
     signal output sha[256] <== Sha256Bytes(maxBytesLength)(paddedBytes, paddedBytesLength);
 }

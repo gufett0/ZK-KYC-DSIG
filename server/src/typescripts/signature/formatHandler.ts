@@ -14,14 +14,14 @@ interface Pkcs7FormattedData {
   CaPublicKeyModulus: string[];
   JudgePublicKeyModulus: string[];
   MessageDigestPatternStartingIndex: string;
-  //Content: string[];
-  //ContentLength: string; //32 bytes - 2048 bits
+  Content: string[];
 }
 
 export default class FormatHandler {
   private Data!: Pkcs7Data;
   private MaxSignAttributesLength!: number;
   private MaxTbsLength!: number;
+  private MaxContentLength!: number;
 
   constructor(data: Pkcs7Data, maxSignAttributesByteLength: number, maxTbsByteLength: number) {
     if (data === null) {
@@ -38,6 +38,7 @@ export default class FormatHandler {
     this.MaxSignAttributesLength = maxSignAttributesByteLength;
     this.MaxTbsLength = maxTbsByteLength;
   }
+
   private extractMessageDigestPatternStartingIndex(signedAttributesPaddedString: string[]): number {
     let messageDigestPattern = [6, 9, 42, 134, 72, 134, 247, 13, 1, 9, 4, 49, 34, 4, 32];
 
@@ -63,13 +64,13 @@ export default class FormatHandler {
     const [certificateTbsPadded, certificateTbsPaddedLength] = sha256Pad(this.Data.CertificateTbs, this.MaxTbsLength);
     const certificateTbsPaddedString: string[] = Uint8ArrayToCharArray(certificateTbsPadded);
     const messageDigest: string[] = Uint8ArrayToCharArray(this.Data.MessageDigest);
-    console.log(messageDigest.length);
     const messageDigestPatternStartingIndex: string =
       this.extractMessageDigestPatternStartingIndex(signedAttributesPaddedString).toString();
-    //const content: string[] = Uint8ArrayToCharArray(this.Data.Content);
     const exponent: string = this.Data.Exponent.toString();
     const judgePublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.JudgePublicKeyModulus);
-    //const ContentLength = this.Data.Content.length.toString();
+    const content: string[] = Uint8ArrayToCharArray(this.Data.Content);
+    console.log(Common.hashString(Buffer.from(this.Data.Content)).toString());
+    console.log(Buffer.from(this.Data.MessageDigest).toString("hex"));
     return {
       SignedAttributes: signedAttributesPaddedString,
       SignedAttributesLength: signedAttributesPaddedLength.toString(),
@@ -81,8 +82,7 @@ export default class FormatHandler {
       CaPublicKeyModulus: caPublicKeyModulus,
       JudgePublicKeyModulus: judgePublicKeyModulus,
       MessageDigestPatternStartingIndex: messageDigestPatternStartingIndex.toString(),
-      //Content: content,
-      //ContentLength: ContentLength,
+      Content: content,
     };
   }
 }
@@ -93,5 +93,5 @@ const a = new pkcs7data(
   Common.readFileToBinaryString("../../files/JudgePublicKey.pem")
 );
 const b = new FormatHandler(a.getPkcs7DataForZkpKyc(), 512, 2048);
-b.getFormattedDataForKzpCircuit();
 //Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));
+b.getFormattedDataForKzpCircuit();

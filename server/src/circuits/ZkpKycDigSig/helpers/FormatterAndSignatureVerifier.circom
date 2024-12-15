@@ -5,7 +5,7 @@ include "@zk-email/circuits/utils/array.circom";
 include "@zk-email/circuits/utils/hash.circom";
 include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
-include "./Hash.circom";
+include "./HashPadded.circom";
 
 //DONE
 //Code similar to the one used at the beginning of zk-email email-verifier.circom
@@ -19,7 +19,7 @@ template FormatterAndSignatureVerifier(maxDataLength, keyLength, chunksBitLength
     signal input signature[totalChunksNumber];
     signal input publicKey[totalChunksNumber];
 
-    signal output sha[256] <== Hash(maxDataLength)(data, dataLength);
+    signal output sha[256] <== HashPadded(maxDataLength)(data, dataLength);
 
     var rsaMessageSize = (256 + chunksBitLength) \ chunksBitLength;
     component rsaMessage[rsaMessageSize];

@@ -47,7 +47,7 @@ export default class Common extends Static {
     }
   }
 
-  public static hashString(input: string | Buffer): string {
+  public static hashString(input: string | Buffer): any {
     let hasher = crypto.createHash("SHA256");
     hasher.update(input);
     return hasher.digest("hex");
@@ -92,5 +92,16 @@ export default class Common extends Static {
     } catch (error) {
       logger.error("Error writing keys to disk:", error);
     }
+  }
+
+  public static convertBufferToBitArray(buffer: Buffer): number[] {
+    const bitArray: number[] = [];
+    for (let i = 0; i < buffer.length; i++) {
+      const byte = buffer[i];
+      for (let j = 7; j >= 0; j--) {
+        bitArray.push((byte >> j) & 1);
+      }
+    }
+    return bitArray;
   }
 }

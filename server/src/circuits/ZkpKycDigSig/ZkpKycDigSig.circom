@@ -10,8 +10,9 @@ include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
 include "./helpers/FormatterAndSignatureVerifier.circom";
 include "./helpers/ExtractMessageDigestFromSignedAttributes.circom";
+include "./helpers/VerifyHash.circom";
 
-template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunksBitLength, totalChunksNumber) {
+template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, maxContentLength, chunksBitLength, totalChunksNumber) {
 
     signal input SignedAttributes[maxSignedAttributesLength];
     signal input SignedAttributesLength;
@@ -25,12 +26,11 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
     
     signal input JudgePublicKeyModulus[totalChunksNumber];
     signal input MessageDigestPatternStartingIndex;
-    
     var maxMessageDigestLength = 32;
-    //signal input Content[16]; //error should be different
-    //signal input MessageDigestOidStartPosition;
 
-    //Verify the signature of the signed attributes and of the certificate
+    signal input Content[maxContentLength];
+
+    //Verify the SIGNATURE of the signed attributes and of the certificate
     component signatureVerify = FormatterAndSignatureVerifier(maxSignedAttributesLength,2048, chunksBitLength, totalChunksNumber);
     component certificateSignatureVerify= FormatterAndSignatureVerifier(maxCertificateTbsLength,2048, chunksBitLength, totalChunksNumber);
 
@@ -44,16 +44,25 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
     certificateSignatureVerify.signature <== CertificateSignature;
     certificateSignatureVerify.publicKey <== CaPublicKeyModulus;
 
-    //Extract the message digest from the signed attributes
+    //Verify the MESSAGE DIGEST from the signed attributes
+    //Extract it
     component messageDigestExtractor = ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, maxMessageDigestLength);
     messageDigestExtractor.SignedAttributes <== SignedAttributes;
     messageDigestExtractor.SignedAttributesLength <== SignedAttributesLength;
     messageDigestExtractor.MessageDigestPatternStartingIndex <== MessageDigestPatternStartingIndex;
 
     signal MessageDigest[maxMessageDigestLength] <== messageDigestExtractor.MessageDigest;
+
+    //Verify it with the padded content
+    component verifyHash = VerifyHash(maxContentLength);
+    verifyHash.bytes <== Content;
+    verifyHash.expectedSha <== MessageDigest;
+
+    verifyHash.isMatch === 1;
+    
     //TODO Continue
     //1st step call the ExtractMessageDigestFromSignedAttributes to get the message digest. The function must be implemented.
     //2nd step call Sha256 on the content and compare it with the message digest. I need to define the format of the content.
 }
 
-component main = ZkpKycDigSig(512,2048,121,17);
+component main = ZkpKycDigSig(512,2048,344,121,17);

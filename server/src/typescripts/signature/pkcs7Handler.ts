@@ -1,5 +1,6 @@
 import * as asn1Lib from "asn1js";
 import * as pkiLib from "pkijs";
+import common from "@utils/common";
 export interface Pkcs7Data {
   PublicKeyModulus: BigInt;
   CaPublicKeyModulus: BigInt;
@@ -196,7 +197,7 @@ export default class Pkcs7Handler {
       throw new Error("No eContent found from EncapsulatedContentInfo");
     }
     const contentArrayBuffer = this.EncapContentInfo.eContent.valueBlock.valueHexView;
-    this.Content = Buffer.from(contentArrayBuffer);
+    this.Content = Buffer.from(Buffer.from(contentArrayBuffer).toString(), "ascii");
   }
   private extractMessageDigestFromSignedAttributesFromArray(signedAttributesIndex: number = 0) {
     let messageDigest: Buffer | null = null;
