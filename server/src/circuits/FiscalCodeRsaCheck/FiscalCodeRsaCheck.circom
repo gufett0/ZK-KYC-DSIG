@@ -18,4 +18,4 @@ template FiscalCodeRsaCheck(w, nb) {
 }
 
 // Instantiate the main component with specified parameters
-component main {public [public_key]} = FiscalCodeRsaCheck(64, 32);
+component main {public [public_key]} = FiscalCodeRsaCheck(121, 17); //64-32

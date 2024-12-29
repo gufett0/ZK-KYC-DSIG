@@ -197,7 +197,7 @@ export default class Pkcs7Handler {
       throw new Error("No eContent found from EncapsulatedContentInfo");
     }
     const contentArrayBuffer = this.EncapContentInfo.eContent.valueBlock.valueHexView;
-    this.Content = Buffer.from(Buffer.from(contentArrayBuffer).toString(), "ascii");
+    this.Content = Buffer.from(contentArrayBuffer);
   }
   private extractMessageDigestFromSignedAttributesFromArray(signedAttributesIndex: number = 0) {
     let messageDigest: Buffer | null = null;
@@ -235,7 +235,6 @@ export default class Pkcs7Handler {
     if (caPublicKeyASN1.offset === -1) {
       throw new Error("Error parsing CA public key ASN.1");
     }
-
     const caRsaPublicKey = new pkiLib.RSAPublicKey({ schema: caPublicKeyASN1.result });
     this.CaPublicKeyModulus = BigInt(
       "0x" + Buffer.from(caRsaPublicKey.modulus.valueBlock.valueHexView).toString("hex")

@@ -22,7 +22,6 @@ template ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, max
     assert(maxSignedAttributesLength > SignedAttributesLength);
     assert(SignedAttributesLength > 0);
     assert(maxMessageDigestLength > 0);
-    assert(messageDigestPatternLength > 0);
     assert(MessageDigestPatternStartingIndex + messageDigestPatternLength + maxMessageDigestLength <= maxSignedAttributesLength);
 
 
@@ -37,7 +36,7 @@ template ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, max
     }
     patternMatchCheck.isMatch === 1;
 
-    //Fill the message digest excluding the pattern
+    //Fill the message digest excluding the pattern for output
     for (var i = 0; i < maxMessageDigestLength; i++) {
         MessageDigest[i] <== MessageDigestWithPattern[messageDigestPatternLength + i];
     }

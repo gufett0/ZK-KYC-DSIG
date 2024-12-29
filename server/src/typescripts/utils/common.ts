@@ -65,6 +65,26 @@ export default class Common extends Static {
     }
   }
 
+  public static getPrivKeyModulusFromPem(privateKeyPem: string): string {
+    try {
+      const privateKey: forge.pki.rsa.PrivateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+      return privateKey.n.toString();
+    } catch (err) {
+      logger.error("Error extracting private key from PEM string:", err);
+      return "";
+    }
+  }
+
+  public static getPubKeyModulusFromPem(publicKeyPem: string): string {
+    try {
+      const publicKey: forge.pki.rsa.PublicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+      return publicKey.n.toString();
+    } catch (err) {
+      logger.error("Error extracting public key from PEM string:", err);
+      return "";
+    }
+  }
+
   public static generateRSAKeyPair() {
     const keyPair = forge.pki.rsa.generateKeyPair({
       bits: 2048,

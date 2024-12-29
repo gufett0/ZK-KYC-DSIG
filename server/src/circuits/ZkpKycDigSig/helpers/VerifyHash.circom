@@ -16,9 +16,6 @@ template VerifyHash(maxBytesLength) {
     //byte sha hash
     signal input expectedSha[shaByteLength];
 
-    //boolean if match
-    signal output isMatch;
-
     //convert expectedSha to bits
     component expectedSha2bits[shaByteLength];
     signal expectedShaBits[shaBitLength];
@@ -52,6 +49,4 @@ template VerifyHash(maxBytesLength) {
     for (var i = 0; i < shaBitLength; i++) {
         computedShaBits[i] === expectedShaBits[i];
     }
-
-    isMatch <== 1;
 }

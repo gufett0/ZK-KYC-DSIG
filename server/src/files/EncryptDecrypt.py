@@ -38,7 +38,7 @@ if __name__ == "__main__":
     private_key_path = "./JudgePrivateKey.pem"
 
     # The message to encrypt
-    message = "Fiscal Code"
+    message = "GRDNNA66L65B034A"
 
     try:
         # Load the public and private keys

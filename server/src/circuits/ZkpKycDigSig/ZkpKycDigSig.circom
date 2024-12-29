@@ -11,8 +11,10 @@ include "circomlib/circuits/bitify.circom";
 include "./helpers/FormatterAndSignatureVerifier.circom";
 include "./helpers/ExtractMessageDigestFromSignedAttributes.circom";
 include "./helpers/VerifyHash.circom";
+include "./helpers/VerifySimpleRsaEncryptionBase64AndExtractSubstring.circom";
+include "./helpers/VerifyFiscalCodeAndPubkeyFromCertTbs.circom";
 
-template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, maxContentLength, chunksBitLength, totalChunksNumber) {
+template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunksBitLength, totalChunksNumber) {
 
     signal input SignedAttributes[maxSignedAttributesLength];
     signal input SignedAttributesLength;
@@ -25,12 +27,32 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, maxCon
     signal input CaPublicKeyModulus[totalChunksNumber];
     
     signal input JudgePublicKeyModulus[totalChunksNumber];
+
+    //for extracting the message digest from the signed attributes
     signal input MessageDigestPatternStartingIndex;
     var maxMessageDigestLength = 32;
 
-    signal input Content[maxContentLength];
+    //for extracting the fiscal code and the public key from the certificate tbs
+    var maxFiscalCodeLength = 16;
+    //signal input FiscalCodePatternStartingIndex;
+    //signal input PublicKeyModulusPatternStartingIndex;
 
-    //Verify the SIGNATURE of the signed attributes and of the certificate
+    //The content must be as long as the key so 2048 bits = 256 bytes
+    var maxDecryptedContentLength = 256;
+    //Value 344 is mandatory since it's the base64 length of an rsa 2048 signature
+    var maxContentLength = 344;
+    signal input Content[maxContentLength];
+    signal input DecryptedContent[maxDecryptedContentLength];
+    signal input DecryptedContentLength;
+    signal input FiscalCodeIndexInDecryptedContent;
+
+    //indexes to extract the fiscal code and the public key from the certificate tbs
+    signal input FiscalCodePatternStartingIndexInTbs;
+    signal input PublicKeyModulusPatternStartingIndexInTbs;
+    
+
+    //1-Verify the SIGNATURE of the signed attributes
+    //2-Verify the SIGNATURE of the certificate
     component signatureVerify = FormatterAndSignatureVerifier(maxSignedAttributesLength,2048, chunksBitLength, totalChunksNumber);
     component certificateSignatureVerify= FormatterAndSignatureVerifier(maxCertificateTbsLength,2048, chunksBitLength, totalChunksNumber);
 
@@ -44,13 +66,12 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, maxCon
     certificateSignatureVerify.signature <== CertificateSignature;
     certificateSignatureVerify.publicKey <== CaPublicKeyModulus;
 
-    //Verify the MESSAGE DIGEST from the signed attributes
+    //3-Verify the MESSAGE DIGEST from the signed attributes
     //Extract it
     component messageDigestExtractor = ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, maxMessageDigestLength);
     messageDigestExtractor.SignedAttributes <== SignedAttributes;
     messageDigestExtractor.SignedAttributesLength <== SignedAttributesLength;
     messageDigestExtractor.MessageDigestPatternStartingIndex <== MessageDigestPatternStartingIndex;
-
     signal MessageDigest[maxMessageDigestLength] <== messageDigestExtractor.MessageDigest;
 
     //Verify it with the padded content
@@ -58,11 +79,24 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, maxCon
     verifyHash.bytes <== Content;
     verifyHash.expectedSha <== MessageDigest;
 
-    verifyHash.isMatch === 1;
-    
-    //TODO Continue
-    //1st step call the ExtractMessageDigestFromSignedAttributes to get the message digest. The function must be implemented.
-    //2nd step call Sha256 on the content and compare it with the message digest. I need to define the format of the content.
+    //4-Verify the CONTENT with the fiscal code and the judge public key
+    component verifyRsa = VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxDecryptedContentLength, maxContentLength, maxFiscalCodeLength, chunksBitLength, totalChunksNumber);
+    verifyRsa.SignatureBase64 <== Content;
+    verifyRsa.PublicKeyModulus <== JudgePublicKeyModulus;
+    verifyRsa.Message <== DecryptedContent;
+    verifyRsa.IndexOfPartialMessage <== FiscalCodeIndexInDecryptedContent;
+    verifyRsa.MessageLength <== DecryptedContentLength;
+    signal FiscalCode[maxFiscalCodeLength] <== verifyRsa.Substring;
+
+    //5-Verify that the FISCAL CODE and the PUBLIC KEY corresponds with the ones contained in the CERTIFICATE TBS
+    component verifyFiscalCodeAndPubKey = VerifyFiscalCodeAndPubkeyFromCertTbs(maxCertificateTbsLength,maxFiscalCodeLength,chunksBitLength,totalChunksNumber);
+    verifyFiscalCodeAndPubKey.CertificateTbs <== CertificateTbs;
+    verifyFiscalCodeAndPubKey.CertificateTbsLength <== CertificateTbsLength;
+    verifyFiscalCodeAndPubKey.FiscalCode <== FiscalCode;
+    verifyFiscalCodeAndPubKey.PublicKeyModulus <== PublicKeyModulus;
+    verifyFiscalCodeAndPubKey.FiscalCodePatternStartingIndex <== FiscalCodePatternStartingIndexInTbs;
+    verifyFiscalCodeAndPubKey.PublicKeyModulusPatternStartingIndex <== PublicKeyModulusPatternStartingIndexInTbs;
 }
 
-component main = ZkpKycDigSig(512,2048,344,121,17);
+//The content is the ciphertext of a data structure containing the fiscal code encrypted with the judge public key
+component main {public [CaPublicKeyModulus,JudgePublicKeyModulus,Content]}= ZkpKycDigSig(512,2048,121,17);

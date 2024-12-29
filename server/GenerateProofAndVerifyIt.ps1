@@ -6,6 +6,9 @@ param(
     [string] $NodeModulesDir = ".\node_modules",
     [switch] $Solidity
 )
+
+$env:NODE_OPTIONS = "--max-old-space-size=12288"
+
 $fullOuputDir = [System.IO.Path]::Combine($CircuitDir, $OutputDir)
 $circomFile = -join($CircuitName,".circom")
 $wasmFile = -join($CircuitName,".wasm")
@@ -165,4 +168,5 @@ function Start-Compilation{
         Start-GenerateSolidyVerifier
     }
 }
+
 Start-Compilation

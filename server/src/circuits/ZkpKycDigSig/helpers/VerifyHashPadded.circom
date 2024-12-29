@@ -16,8 +16,6 @@ template VerifyHashPadded(maxBytesLength) {
     signal input paddedBytesLength;
     //byte sha hash
     signal input expectedSha[shaByteLength];
-    //boolean if match
-    signal output isMatch;
 
     assert(paddedBytesLength <= maxBytesLength);
 
@@ -40,5 +38,4 @@ template VerifyHashPadded(maxBytesLength) {
         expectedShaBits[i] === computedShaBits[i];
     }
 
-    isMatch <== 1;
 }
