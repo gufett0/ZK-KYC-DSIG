@@ -138,6 +138,7 @@ xwIDAQAB
 
     // Prepare the inputs for the circuit
     const inputs = {
+      asd2: Uint8ArrayToCharArray(paddedMessage),
       asd: toCircomBigIntBytes(paddedMessageBigInt),
       fiscal_code: bigint_to_array(w, nb, paddedMessageBigInt).map((b) => b.toString()), // Fiscal code
       cipher_text: bigint_to_array(w, nb, cipherText).map((b) => b.toString()), // Encrypted fiscal code

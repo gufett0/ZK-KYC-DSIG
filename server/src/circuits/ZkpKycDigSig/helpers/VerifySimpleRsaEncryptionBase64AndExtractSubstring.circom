@@ -9,6 +9,7 @@ include "@zk-email/circuits/utils/hash.circom";
 include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
 
+
 template VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxBytesLength, maxBase64Length, maxSubstringLength, chunksBitLength, totalChunksNumber) {
     signal input SignatureBase64[maxBase64Length];
     signal input PublicKeyModulus[totalChunksNumber];
@@ -18,10 +19,6 @@ template VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxBytesLength, maxB
     signal output Substring[maxSubstringLength];
 
     assert(MessageLength <= maxBytesLength);
-    //Since we expect a json we add to the maxlen 2 for the quotes and the parenthesis
-    var substringAndMoreLength = maxSubstringLength + 2;
-    assert(IndexOfPartialMessage <= (MessageLength-substringAndMoreLength));
-    AssertZeroPadding(maxBytesLength)(Message, MessageLength);
 
     //Decode the signature and split it in chunks
     signal Signature[maxBytesLength] <== Base64Decode(maxBytesLength)(SignatureBase64);
@@ -29,7 +26,6 @@ template VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxBytesLength, maxB
 
     //Split data in chunks
     signal ChunkedMessage[totalChunksNumber] <== SplitBytesToWords(maxBytesLength,chunksBitLength,totalChunksNumber)(Message);
-
 
     //Check that the signature is in proper form and reduced mod modulus.
     component signatureRangeCheck[totalChunksNumber];
@@ -44,17 +40,12 @@ template VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxBytesLength, maxB
 
     //Check the rsa ciphertext
     component bigPow = FpPow65537Mod(chunksBitLength, totalChunksNumber);
-    bigPow.base <== ChunkedMessage;//ChunkedMessage;
+    bigPow.base <== ChunkedMessage;
     bigPow.modulus <== PublicKeyModulus;
 
-    /*for (var i = 0; i < totalChunksNumber; i++) {
-        log(bigPow.out[i],ChunkedSignature[i],ChunkedMessage[i]);
-    }*/
-
-    //TODO: Check that the signature is correct
-    /*for (var i = 0; i < totalChunksNumber; i++) {
+    for (var i = 0; i < totalChunksNumber; i++) {
         bigPow.out[i] === ChunkedSignature[i];
-    }*/
+    }
 
     Substring <== VarShiftLeft(maxBytesLength, maxSubstringLength)(Message, IndexOfPartialMessage);
 }

@@ -2,6 +2,7 @@ pragma circom 2.2.0;
 
 include "@zk-email/circuits/utils/array.circom";
 
+
 template VerifyFiscalCodeAndPubkeyFromCertTbs(maxCertificateTbsLength,maxFiscalCodeLength,chunksBitLength,totalChunksNumber) {
     signal input CertificateTbs[maxCertificateTbsLength];
     signal input CertificateTbsLength;

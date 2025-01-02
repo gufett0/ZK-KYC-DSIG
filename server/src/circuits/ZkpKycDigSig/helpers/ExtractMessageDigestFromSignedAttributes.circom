@@ -2,7 +2,6 @@ pragma circom 2.2.0;
 
 include "@zk-email/circuits/utils/array.circom";
 
-//DONE
 template ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, maxMessageDigestLength) {
     signal input SignedAttributes[maxSignedAttributesLength];
     signal input SignedAttributesLength;

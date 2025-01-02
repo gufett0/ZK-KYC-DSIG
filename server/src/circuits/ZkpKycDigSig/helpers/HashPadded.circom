@@ -6,7 +6,7 @@ include "@zk-email/circuits/utils/hash.circom";
 include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
 
-//DONE
+//Hash a padded byte array
 template HashPadded(maxBytesLength) {
     signal input paddedBytes[maxBytesLength];
     signal input paddedBytesLength;

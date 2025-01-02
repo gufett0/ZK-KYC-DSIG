@@ -7,7 +7,8 @@ include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
 include "circomlib/circuits/sha256/sha256.circom";
 
-//DONE
+
+//Verify a hash
 template VerifyHash(maxBytesLength) {
     var shaBitLength = 256;
     var shaByteLength = 32;

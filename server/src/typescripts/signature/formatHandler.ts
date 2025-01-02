@@ -1,6 +1,11 @@
 import Common from "@utils/common";
 import pkcs7data, { Pkcs7Data } from "@signature/pkcs7Handler";
-import { Uint8ArrayToCharArray, toCircomBigIntBytes, padUint8ArrayWithZeros } from "@zk-email/helpers";
+import {
+  Uint8ArrayToCharArray,
+  toCircomBigIntBytes,
+  padUint8ArrayWithZeros,
+  bigIntToChunkedBytes,
+} from "@zk-email/helpers";
 import { sha256Pad } from "@zk-email/helpers";
 import RSA from "@utils/rsa";
 import forge from "node-forge";
@@ -29,12 +34,14 @@ export default class FormatHandler {
   private MaxSignAttributesLength!: number;
   private MaxTbsLength!: number;
   private DecryptedContent!: string;
+  private DecryptedContentBuffer!: Buffer;
 
   constructor(
     data: Pkcs7Data,
     maxSignAttributesByteLength: number,
     maxTbsByteLength: number,
-    decryptedContent: string
+    decryptedContent: string,
+    decryptedContentBuffer: Buffer
   ) {
     if (!data) {
       throw new Error("Data from signed file is null");
@@ -49,10 +56,14 @@ export default class FormatHandler {
     if (!decryptedContent || decryptedContent.length <= 16) {
       throw new Error("Invalid decrypted content length");
     }
+    if (!decryptedContentBuffer || decryptedContentBuffer.length < 256) {
+      throw new Error("Invalid decrypted content buffer length");
+    }
     this.Data = data;
     this.MaxSignAttributesLength = maxSignAttributesByteLength;
     this.MaxTbsLength = maxTbsByteLength;
     this.DecryptedContent = decryptedContent;
+    this.DecryptedContentBuffer = decryptedContentBuffer;
   }
 
   private extractMessageDigestPatternStartingIndex(signedAttributesPaddedString: string[]): number {
@@ -85,14 +96,14 @@ export default class FormatHandler {
     const exponent: string = this.Data.Exponent.toString();
     const judgePublicKeyModulus: string[] = toCircomBigIntBytes(this.Data.JudgePublicKeyModulus);
     const content: string[] = Uint8ArrayToCharArray(this.Data.Content);
-    const decryptedContent: string[] = Uint8ArrayToCharArray(
-      padUint8ArrayWithZeros(Uint8Array.from(Buffer.from(this.DecryptedContent, "ascii")), 256)
-    );
+    const decryptedContent: string[] = Uint8ArrayToCharArray(this.DecryptedContentBuffer);
     const decryptedContentLength: string = (this.DecryptedContent.indexOf('"}', 16) + '"}'.length).toString();
     const fiscalCodeIndexInDecryptedContent: string = (
-      this.DecryptedContent.indexOf('","data":"', 8) + '","data":"'.length
+      256 -
+      this.DecryptedContent.length +
+      this.DecryptedContent.indexOf('","data":"', 8) +
+      '","data":"'.length
     ).toString();
-
     const fiscalCodePatternInTbs = [
       // (1) OID: 06 03 55 04 05
       "6",
@@ -188,11 +199,13 @@ const a = new pkcs7data(
   Common.readFileToBinaryBuffer("../../files/ArubaPECS.p.A.NGCA3.cer"),
   Common.readFileToUTF8String("../../files/JudgePublicKey.pem")
 );
-//console.log(RSA.packMessage(salt, data));
 
-const b = new FormatHandler(a.getPkcs7DataForZkpKyc(), 512, 2048, RSA.packMessage(salt, data));
+const b = new FormatHandler(
+  a.getPkcs7DataForZkpKyc(),
+  512,
+  2048,
+  RSA.packMessage(salt, data),
+  RSA.packMessageAndPad(salt, data)
+);
 //Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));
 const c = b.getFormattedDataForKzpCircuit();
-
-console.log(c.FiscalCodePatternStartingIndexInTbs);
-console.log(c.PublicKeyModulusPatternStartingIndexInTbs);

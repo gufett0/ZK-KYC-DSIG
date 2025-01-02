@@ -1,6 +1,6 @@
 import * as asn1Lib from "asn1js";
 import * as pkiLib from "pkijs";
-import common from "@utils/common";
+
 export interface Pkcs7Data {
   PublicKeyModulus: BigInt;
   CaPublicKeyModulus: BigInt;
@@ -244,11 +244,22 @@ export default class Pkcs7Handler {
     this.RsaExponent = 65537n;
   }
   private extractJudgePublicKeyModulus() {
-    const pem: string = this.JudgePublicKeyPem.replace(
-      /-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\n|\r/g,
-      ""
-    );
-    this.JudgePublicKeyModulus = BigInt("0x" + Buffer.from(pem, "base64").toString("hex"));
+    const base64Key = this.JudgePublicKeyPem.replace(/-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\s+/g, "");
+    const derBytes = Buffer.from(base64Key, "base64");
+
+    //pem format is base64 encoded ASN1 DER format
+    const asn1 = asn1Lib.fromBER(derBytes.buffer.slice(derBytes.byteOffset, derBytes.byteOffset + derBytes.byteLength));
+    if (asn1.offset === -1) {
+      throw new Error("Invalid ASN.1 / DER in public key PEM.");
+    }
+
+    const pubKeyInfo = new pkiLib.PublicKeyInfo({ schema: asn1.result });
+    if (!(pubKeyInfo.parsedKey instanceof pkiLib.RSAPublicKey)) {
+      throw new Error("Not an RSA public key.");
+    }
+
+    const modulusHex = Buffer.from(pubKeyInfo.parsedKey.modulus.valueBlock.valueHexView).toString("hex");
+    this.JudgePublicKeyModulus = BigInt("0x" + modulusHex);
   }
 
   public getPkcs7DataForZkpKyc(): Pkcs7Data {

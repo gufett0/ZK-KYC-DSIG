@@ -7,8 +7,8 @@ include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
 include "./HashPadded.circom";
 
-//DONE
 //Code similar to the one used at the beginning of zk-email email-verifier.circom
+//Verify a RSA signature
 template FormatterAndSignatureVerifier(maxDataLength, keyLength, chunksBitLength, totalChunksNumber) {
     assert(maxDataLength % 64 == 0);
     assert(chunksBitLength * totalChunksNumber > keyLength);
