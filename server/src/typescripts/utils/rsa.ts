@@ -30,22 +30,11 @@ export default class RSA extends Static {
     );
     return decrypted.toString("utf8");
   }
+
   public static packMessage(salt: string, message: string): string {
     return JSON.stringify({ salt: salt, data: message });
   }
-  /*
-  public static packMessageAndPad(salt: string, message: string): Buffer {
-    let buffer = Buffer.from(RSA.packMessage(salt, message), "ascii");
-    if (buffer.length < 256) {
-      // Left-pad with zeros
-      const pad = Buffer.alloc(256 - buffer.length, 0);
-      buffer = Buffer.concat([pad, buffer]);
-    }
-    if (buffer.length > 256) {
-      throw new Error("Message is longer than 256.");
-    }
-    return buffer;
-  }*/
+
   public static packMessageAndPad(salt: string, message: string): Buffer {
     const raw = RSA.packMessage(salt, message);
     const messageBuffer = Buffer.from(raw, "ascii");
@@ -82,31 +71,6 @@ export default class RSA extends Static {
 
     return Buffer.from(c.toString(16), "hex").toString("base64");
   }
-
-  /*public static rsaRawEncrypt(message: Buffer, pubKeyPem: string): string {
-    // parse the public key from PEM
-    const publicKey = forge.pki.publicKeyFromPem(pubKeyPem) as forge.pki.rsa.PublicKey;
-
-    // Convert the message to a BigInteger
-    const m = new forge.jsbn.BigInteger(message.toString("hex"), 16);
-
-    // Convert exponent and modulus to BigIntegers
-    const e = new forge.jsbn.BigInteger(publicKey.e.toString(16), 16);
-    const n = new forge.jsbn.BigInteger(publicKey.n.toString(16), 16);
-
-    // c = m^e mod n
-    const c = m.modPow(e, n);
-
-    // Convert back to bytes.  Might need left-padding to 256 bytes
-    let out = Buffer.from(c.toByteArray());
-
-    // If it’s shorter than 256, left-pad with 0x00
-    if (out.length < 256) {
-      const pad = Buffer.alloc(256 - out.length, 0);
-      out = Buffer.concat([pad, out]);
-    }
-    return Buffer.from(out.toString("hex"), "hex").toString("base64");
-  }*/
 }
 
 /*const data = "GRDNNA66L65B034A";
