@@ -1,14 +1,6 @@
-import Common from "@utils/common";
 import pkcs7data, { Pkcs7Data } from "@signature/pkcs7Handler";
-import {
-  Uint8ArrayToCharArray,
-  toCircomBigIntBytes,
-  padUint8ArrayWithZeros,
-  bigIntToChunkedBytes,
-} from "@zk-email/helpers";
+import { Uint8ArrayToCharArray, toCircomBigIntBytes } from "@zk-email/helpers";
 import { sha256Pad } from "@zk-email/helpers";
-import RSA from "@utils/rsa";
-import forge from "node-forge";
 
 interface Pkcs7FormattedData {
   SignedAttributes: string[];
@@ -188,24 +180,3 @@ export default class FormatHandler {
     };
   }
 }
-
-const data = "GRDNNA66L65B034A";
-const salt = "L0ngR4nd0mS4ltSup3rS3cur3!";
-const saltHash = "c21f05dfc277571930159cf254c403323fe9c82010ee640c3342098e58c75e0b";
-const saltHashHex = Common.hashString(salt);
-
-const a = new pkcs7data(
-  Common.readFileToBinaryBuffer("../../files/kyc.txt.p7m"),
-  Common.readFileToBinaryBuffer("../../files/ArubaPECS.p.A.NGCA3.cer"),
-  Common.readFileToUTF8String("../../files/JudgePublicKey.pem")
-);
-
-const b = new FormatHandler(
-  a.getPkcs7DataForZkpKyc(),
-  512,
-  2048,
-  RSA.packMessage(salt, data),
-  RSA.packMessageAndPad(salt, data)
-);
-//Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(b.getFormattedDataForKzpCircuit(), null, 2));
-const c = b.getFormattedDataForKzpCircuit();

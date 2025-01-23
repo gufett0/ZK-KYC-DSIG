@@ -8,6 +8,7 @@ template ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, max
     signal input MessageDigestPatternStartingIndex;
     signal output MessageDigest[maxMessageDigestLength];
 
+    //ASN1 pattern for the message digest
     //6 => 0x06 (OBJECT IDENTIFIER)
     //9 => 0x09 (length of the OID)
     //42 134 72 134 247 13 1 9 4 => 0x2A 86 48 86 F7 0D 01 09 04 (OID for message digest)
@@ -23,7 +24,7 @@ template ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, max
     assert(maxMessageDigestLength > 0);
     assert(MessageDigestPatternStartingIndex + messageDigestPatternLength + maxMessageDigestLength <= maxSignedAttributesLength);
 
-
+    //Extract the message digest with its ASN1 pattern in front
     signal MessageDigestWithPattern[maxMessageDigestLength + messageDigestPatternLength];
     MessageDigestWithPattern <== VarShiftLeft(maxSignedAttributesLength, maxMessageDigestLength + messageDigestPatternLength)(SignedAttributes, MessageDigestPatternStartingIndex);
 
@@ -35,7 +36,7 @@ template ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, max
     }
     patternMatchCheck.isMatch === 1;
 
-    //Fill the message digest excluding the pattern for output
+    //Fill the message digest with the bytes following the pattern
     for (var i = 0; i < maxMessageDigestLength; i++) {
         MessageDigest[i] <== MessageDigestWithPattern[messageDigestPatternLength + i];
     }

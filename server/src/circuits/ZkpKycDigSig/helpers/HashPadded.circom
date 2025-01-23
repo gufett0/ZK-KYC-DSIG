@@ -17,5 +17,6 @@ template HashPadded(maxBytesLength) {
     assert(maxBytesLength > paddedBytesLength);
     AssertZeroPadding(maxBytesLength)(paddedBytes, paddedBytesLength);
 
+    //Compute hash
     signal output sha[256] <== Sha256Bytes(maxBytesLength)(paddedBytes, paddedBytesLength);
 }

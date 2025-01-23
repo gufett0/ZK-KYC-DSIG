@@ -11,20 +11,20 @@ template VerifyFiscalCodeAndPubkeyFromCertTbs(maxCertificateTbsLength,maxFiscalC
     signal input FiscalCode[maxFiscalCodeLength];
     signal input PublicKeyModulus[totalChunksNumber];
 
-    //FISCAL CODE
+    //ASN1 pattern for fiscal code
     var fiscalCodePatternLength = 13;
     var fiscalCodePattern[fiscalCodePatternLength] = [
         // (1) OID: 06 03 55 04 05
         6, 3, 85, 4, 5,
         // (2) Tag for PrintableString (0x13):
         19,
-        // (3) Length (6 TINIT- + 16 FISCAL CODE):
+        // (3) Length (6 bytes 'TINIT-' + 16 bytes FISCAL CODE):
         22,
-        // (4) First 6 bytes for "TINIT-" (Modify it for other countries)
+        // (4) First 6 bytes for "TINIT-" (Modify IT for other countries)
         84, 73, 78, 73, 84, 45
     ];
 
-    //PUBLIC KEY MODULUS
+    //ASN1 pattern for public key modulus
     var publicKeyModulusPatternLength = 27;
     var publicKeyModulusPattern[publicKeyModulusPatternLength] = [
         // (1) RSA OID:  06 09 2A 86 48 86 F7 0D 01 01 01
@@ -43,9 +43,11 @@ template VerifyFiscalCodeAndPubkeyFromCertTbs(maxCertificateTbsLength,maxFiscalC
         0
     ];
 
+    //Extract the fiscal code with its ASN1 pattern in front
     signal FiscalCodeWithPattern[maxFiscalCodeLength + fiscalCodePatternLength];
     FiscalCodeWithPattern <== VarShiftLeft(maxCertificateTbsLength, maxFiscalCodeLength + fiscalCodePatternLength)(CertificateTbs, FiscalCodePatternStartingIndex);
 
+    //Extract the public key modulus with its ASN1 pattern in front
     var maxPublicKeyModulusLength = 256; //byte length of a 2048 bit key
     signal PublicKeyModulusWithPattern[maxPublicKeyModulusLength+ publicKeyModulusPatternLength];
     PublicKeyModulusWithPattern <== VarShiftLeft(maxCertificateTbsLength, maxPublicKeyModulusLength + publicKeyModulusPatternLength)(CertificateTbs, PublicKeyModulusPatternStartingIndex);
@@ -56,6 +58,7 @@ template VerifyFiscalCodeAndPubkeyFromCertTbs(maxCertificateTbsLength,maxFiscalC
         patternMatchCheckFiscalCode.in[i] <== FiscalCodeWithPattern[i];
         patternMatchCheckFiscalCode.substring[i] <== fiscalCodePattern[i];
     }
+    
     //Verify the fiscal code correspondence with the one passed as input
     for(var i = 0; i < maxFiscalCodeLength; i++){
         patternMatchCheckFiscalCode.in[fiscalCodePatternLength+i] <== FiscalCodeWithPattern[fiscalCodePatternLength+i];

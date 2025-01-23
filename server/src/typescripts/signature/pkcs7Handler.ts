@@ -26,7 +26,6 @@ export default class Pkcs7Handler {
   private Signatures!: asn1Lib.OctetString[];
   private SignedAttributes!: pkiLib.SignedAndUnsignedAttributes[];
   private JudgePublicKeyPem!: string;
-  //Prepared data:
   private PublicKeyModulus!: BigInt;
   private SignedAttributesBuffer!: Buffer;
   private SignatureHexBigInt!: BigInt;
@@ -39,13 +38,13 @@ export default class Pkcs7Handler {
   private JudgePublicKeyModulus!: BigInt;
 
   /*
-  //1-->SignedAttributes could be null since they are optional but they are very used so we assume they are always present.
-  //2-->eContent could be null since they are optional but they are very used so we assume they are always present.
-  //3-->Certificates contain the fiscal code in the form of (for example) TINIT-12345678901 where (TIN=Tax Identification Number, IT=Italy). I'll work only for italy but we could easily generalize it.
+  //1-->SignedAttributes could be null since they are optional but they are almost always used so we assume they are always present.
+  //2-->eContent could be null since they are optional but they are almost always used so we assume they are always present.
+  //3-->Certificates contain the fiscal code in the form of (for example) TINIT-1234567890123456 where (TIN=Tax Identification Number, IT=Italy). I'll work only for italy but we could easily generalize it.
   //4-->I assume that the CA chain is composed of only 1 entity (the root CA) for simplicity. We could easily generalize it.
   //5-->I assume that the signature is always RSA with SHA256. We could easily generalize it.
-  //6-->I assume that the key exponent is always fixed to 65537.
-  //7-->I assume that the public keys are always RSA 2048 bits. Circom does not support other key lengths for RSA. We could generalize using another technology.
+  //6-->I assume that the key exponent is always fixed to 65537. Commonly seen in RSA keys.
+  //7-->I assume that the public keys are always RSA 2048 bits. Circom is not best suited for other (RSA) key lengths. We could generalize using another technology.
   */
 
   constructor(signedFileBinaryBuffer: Buffer, caCertBuffer: Buffer, judgePublicKeyPem: string) {
@@ -247,7 +246,7 @@ export default class Pkcs7Handler {
     const base64Key = this.JudgePublicKeyPem.replace(/-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\s+/g, "");
     const derBytes = Buffer.from(base64Key, "base64");
 
-    //pem format is base64 encoded ASN1 DER format
+    //Pem format is base64 encoded ASN1 DER format
     const asn1 = asn1Lib.fromBER(derBytes.buffer.slice(derBytes.byteOffset, derBytes.byteOffset + derBytes.byteLength));
     if (asn1.offset === -1) {
       throw new Error("Invalid ASN.1 / DER in public key PEM.");

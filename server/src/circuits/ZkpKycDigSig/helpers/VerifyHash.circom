@@ -7,20 +7,17 @@ include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
 include "circomlib/circuits/sha256/sha256.circom";
 
-
-//Verify a hash
 template VerifyHash(maxBytesLength) {
     var shaBitLength = 256;
     var shaByteLength = 32;
     //byte array
     signal input bytes[maxBytesLength];
-    //byte sha hash
+    //byte array hash
     signal input expectedSha[shaByteLength];
 
     //convert expectedSha to bits
     component expectedSha2bits[shaByteLength];
     signal expectedShaBits[shaBitLength];
-
     for (var i = 0; i < shaByteLength; i++) {
         assert(expectedSha[i] >= 0 && expectedSha[i] < 256);
         expectedSha2bits[i] = Num2Bits(8);
@@ -33,7 +30,6 @@ template VerifyHash(maxBytesLength) {
     //Convert bytes to bits
     component byte2bits[maxBytesLength];
     signal bytesBits[maxBytesLength*8];
-
     for (var i = 0; i < maxBytesLength; i++) {
         assert(bytes[i] >= 0 && bytes[i] < 256);
         byte2bits[i] = Num2Bits(8);
@@ -46,7 +42,7 @@ template VerifyHash(maxBytesLength) {
     //Compute the hash
     signal computedShaBits[shaBitLength] <== Sha256(maxBytesLength*8)(bytesBits);
 
-    //Check equality
+    //Verify equality
     for (var i = 0; i < shaBitLength; i++) {
         computedShaBits[i] === expectedShaBits[i];
     }

@@ -7,8 +7,9 @@ include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
 include "./HashPadded.circom";
 
-//Code similar to the one used at the beginning of zk-email email-verifier.circom
+
 //Verify a RSA signature
+//Code similar to the one used at the beginning of zk-email email-verifier.circom
 template FormatterAndSignatureVerifier(maxDataLength, keyLength, chunksBitLength, totalChunksNumber) {
     assert(maxDataLength % 64 == 0);
     assert(chunksBitLength * totalChunksNumber > keyLength);
@@ -19,8 +20,10 @@ template FormatterAndSignatureVerifier(maxDataLength, keyLength, chunksBitLength
     signal input signature[totalChunksNumber];
     signal input publicKey[totalChunksNumber];
 
+    //Compute hash of data
     signal output sha[256] <== HashPadded(maxDataLength)(data, dataLength);
 
+    //Convert the hash to chunks
     var rsaMessageSize = (256 + chunksBitLength) \ chunksBitLength;
     component rsaMessage[rsaMessageSize];
     for (var i = 0; i < rsaMessageSize; i++) {
@@ -33,6 +36,7 @@ template FormatterAndSignatureVerifier(maxDataLength, keyLength, chunksBitLength
         rsaMessage[i \ chunksBitLength].in[i % chunksBitLength] <== 0;
     }
 
+    //Verify the RSA signature
     component rsaVerifier = RSAVerifier65537(chunksBitLength, totalChunksNumber);
     for (var i = 0; i < rsaMessageSize; i++) {
         rsaVerifier.message[i] <== rsaMessage[i].out;

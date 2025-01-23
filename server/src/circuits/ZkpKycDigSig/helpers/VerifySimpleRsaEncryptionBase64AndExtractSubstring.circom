@@ -17,10 +17,9 @@ template VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxBytesLength, maxB
     signal input IndexOfPartialMessage;
     signal input MessageLength;
     signal output Substring[maxSubstringLength];
-
     assert(MessageLength <= maxBytesLength);
 
-    //Decode the signature and split it in chunks
+    //Decode the base64 signature and split it in chunks
     signal Signature[maxBytesLength] <== Base64Decode(maxBytesLength)(SignatureBase64);
     signal ChunkedSignature[totalChunksNumber] <== SplitBytesToWords(maxBytesLength,chunksBitLength,totalChunksNumber)(Signature);
 
@@ -38,15 +37,17 @@ template VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxBytesLength, maxB
     }
     bigLessThan.out === 1;
 
-    //Check the rsa ciphertext
+    //Compute the rsa ciphertext
     component bigPow = FpPow65537Mod(chunksBitLength, totalChunksNumber);
     bigPow.base <== ChunkedMessage;
     bigPow.modulus <== PublicKeyModulus;
 
+    //Verify the rsa signature
     for (var i = 0; i < totalChunksNumber; i++) {
         bigPow.out[i] === ChunkedSignature[i];
     }
-
+    
+    //Extract the substring
     Substring <== VarShiftLeft(maxBytesLength, maxSubstringLength)(Message, IndexOfPartialMessage);
 }
 

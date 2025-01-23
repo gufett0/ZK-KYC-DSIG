@@ -28,14 +28,11 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
     
     signal input JudgePublicKeyModulus[totalChunksNumber];
 
-    //for extracting the message digest from the signed attributes
+    //Index necessary for extracting the message digest from the signed attributes
     signal input MessageDigestPatternStartingIndex;
     var maxMessageDigestLength = 32;
 
-    //for extracting the fiscal code and the public key from the certificate tbs
     var maxFiscalCodeLength = 16;
-    //signal input FiscalCodePatternStartingIndex;
-    //signal input PublicKeyModulusPatternStartingIndex;
 
     //The content must be as long as the key so 2048 bits = 256 bytes
     var maxDecryptedContentLength = 256;
@@ -46,7 +43,7 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
     signal input DecryptedContentLength;
     signal input FiscalCodeIndexInDecryptedContent;
 
-    //indexes to extract the fiscal code and the public key from the certificate tbs
+    //Indexes necessary for extracting the fiscal code and the public key from the certificate tbs
     signal input FiscalCodePatternStartingIndexInTbs;
     signal input PublicKeyModulusPatternStartingIndexInTbs;
     
@@ -66,20 +63,19 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
     certificateSignatureVerify.signature <== CertificateSignature;
     certificateSignatureVerify.publicKey <== CaPublicKeyModulus;
 
-    //3-Verify the MESSAGE DIGEST from the signed attributes
-    //Extract it
+    //3-Extract the MESSAGE DIGEST from the signed attributes
     component messageDigestExtractor = ExtractMessageDigestFromSignedAttributes(maxSignedAttributesLength, maxMessageDigestLength);
     messageDigestExtractor.SignedAttributes <== SignedAttributes;
     messageDigestExtractor.SignedAttributesLength <== SignedAttributesLength;
     messageDigestExtractor.MessageDigestPatternStartingIndex <== MessageDigestPatternStartingIndex;
     signal MessageDigest[maxMessageDigestLength] <== messageDigestExtractor.MessageDigest;
 
-    //Verify it with the padded content
+    //Verify it corresponds to the hash of the content
     component verifyHash = VerifyHash(maxContentLength);
     verifyHash.bytes <== Content;
     verifyHash.expectedSha <== MessageDigest;
 
-    //4-Verify the CONTENT with the fiscal code and the judge public key
+    //4-Verify that the CONTENT is a cipher encrypted witht he judgle public key and which plain text contains the fiscal code
     component verifyRsa = VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxDecryptedContentLength, maxContentLength, maxFiscalCodeLength, chunksBitLength, totalChunksNumber);
     verifyRsa.SignatureBase64 <== Content;
     verifyRsa.PublicKeyModulus <== JudgePublicKeyModulus;
@@ -98,5 +94,12 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
     verifyFiscalCodeAndPubKey.PublicKeyModulusPatternStartingIndex <== PublicKeyModulusPatternStartingIndexInTbs;
 }
 
-//The content is the ciphertext of a data structure containing the fiscal code encrypted with the judge public key
+
+//The content is the ciphertext of a json data structure containing a random salt and the fiscal code encrypted with the judge public key
 component main {public [CaPublicKeyModulus,JudgePublicKeyModulus,Content]}= ZkpKycDigSig(512,2048,121,17);
+
+//Parameters:
+//maxSignedAttributesLength: 512 should be enough 
+//maxCertificateTbsLength: 2048 should be enough
+//chunksBitLength x totalChunksNumber: this product must be STRICTLY greater than the chunked signature
+//The best values for a 2048 bit key are respectively 121 (bit length per chunk) and 17 (number of chunks)
