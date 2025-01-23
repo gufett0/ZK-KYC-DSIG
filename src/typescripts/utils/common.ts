@@ -1,5 +1,5 @@
 import Static from "@utils/static";
-import logger from "@logger";
+import logger from "@/utils/logger";
 import { readFileSync, writeFileSync } from "fs";
 import crypto from "crypto";
 import forge from "node-forge";

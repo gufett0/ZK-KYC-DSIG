@@ -1,4 +1,4 @@
-import pkcs7data, { Pkcs7Data } from "@signature/pkcs7Handler";
+import { Pkcs7Data } from "@signature/pkcs7Handler";
 import { Uint8ArrayToCharArray, toCircomBigIntBytes } from "@zk-email/helpers";
 import { sha256Pad } from "@zk-email/helpers";
 

@@ -4,10 +4,17 @@ param(
     [string] $OutputDir = "build",
     [string] $InputFile = "input.json",
     [string] $NodeModulesDir = ".\node_modules",
-    [switch] $Solidity
+    [switch] $Compile,
+    [switch] $Setup,
+    [switch] $Solidity,
+    [switch] $Proof,
+    [switch] $Verify
 )
 
 $env:NODE_OPTIONS = "--max-old-space-size=12288"
+
+#Example of how to call the script
+#.\GenerateProofAndVerifyIt.ps1 -CircuitName "circuit_name" -CircuitDir ".\src\circuits\CircuitFolder\" -Solidity
 
 $fullOuputDir = [System.IO.Path]::Combine($CircuitDir, $OutputDir)
 $circomFile = -join($CircuitName,".circom")

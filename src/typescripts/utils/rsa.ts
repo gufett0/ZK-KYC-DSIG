@@ -1,6 +1,5 @@
 import Static from "./static";
 import crypto from "crypto";
-import Common from "./common";
 import forge from "node-forge";
 
 export default class RSA extends Static {
@@ -42,12 +41,12 @@ export default class RSA extends Static {
     const k = 256;
     const mLen = messageBuffer.length;
 
-    //For deterministic PKCS#1 v1.5 padding, we need at least 11 bytes overhead:
+    //For deterministic PKCS#1 v1.5 padding, we use 11 bytes overhead:
     //0x00 | 0x02 | PS...PS | 0x00 | message
     if (mLen > k - 11) {
       throw new Error("Message too long to fit into 2048-bit RSA block with deterministic PKCS#1 v1.5 padding.");
     }
-    //Build the “PS” (padding) region. For deterministic style: fill with 0x01
+    //Build the PS (padding) region. For determinism: fill with 0x01
     const psLen = k - mLen - 3;
     const ps = Buffer.alloc(psLen, 0x01);
 
@@ -72,21 +71,3 @@ export default class RSA extends Static {
     return Buffer.from(c.toString(16), "hex").toString("base64");
   }
 }
-
-/*const data = "GRDNNA66L65B034A";
-const salt = "L0ngR4nd0mS4ltSup3rS3cur3!";
-
-const buffer = RSA.packMessageAndPad(salt, data);
-
-const pubKeyPem = Common.readFileToUTF8String("../../files/JudgePublicKey.pem");
-const privKeyPem = Common.readFileToUTF8String("../../files/JudgePrivateKey.pem");
-
-const cipher = RSA.encrypt(pubKeyPem, buffer);
-const plain = RSA.decrypt(privKeyPem, cipher);
-
-console.log("padded:", JSON.stringify(buffer));
-console.log("cipher:", JSON.stringify(cipher));
-console.log("plain:", JSON.stringify(plain));
-
-const cipher2 = RSA.rsaRawEncrypt(buffer, pubKeyPem);
-console.log("cipher2:", JSON.stringify(cipher2));*/
