@@ -6,3 +6,4 @@ dist/
 logs/
 src/circuits/**/build/
 src/circuits/**/input.json
+reports/

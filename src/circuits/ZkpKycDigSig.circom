@@ -8,11 +8,11 @@ include "@zk-email/circuits/utils/regex.circom";
 include "@zk-email/circuits/utils/hash.circom";
 include "@zk-email/circuits/utils/bytes.circom";
 include "circomlib/circuits/bitify.circom";
-include "./helpers/FormatterAndSignatureVerifier.circom";
-include "./helpers/ExtractMessageDigestFromSignedAttributes.circom";
-include "./helpers/VerifyHash.circom";
-include "./helpers/VerifySimpleRsaEncryptionBase64AndExtractSubstring.circom";
-include "./helpers/VerifyFiscalCodeAndPubkeyFromCertTbs.circom";
+include "./templates/FormatterAndSignatureVerifier.circom";
+include "./templates/ExtractMessageDigestFromSignedAttributes.circom";
+include "./templates/VerifyHash.circom";
+include "./templates/VerifySimpleRsaEncryptionBase64AndExtractSubstring.circom";
+include "./templates/VerifyFiscalCodeAndPubkeyFromCertTbs.circom";
 
 template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunksBitLength, totalChunksNumber) {
 

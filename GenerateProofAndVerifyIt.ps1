@@ -14,7 +14,7 @@ param(
 $env:NODE_OPTIONS = "--max-old-space-size=12288"
 
 #Example of how to call the script
-#.\GenerateProofAndVerifyIt.ps1 -CircuitName "circuit_name" -CircuitDir ".\src\circuits\CircuitFolder\" -Solidity
+#.\GenerateProofAndVerifyIt.ps1 -CircuitName "ZkpKycDigSig" -CircuitDir ".\src\circuits\" -Compile -Setup -Solidity -Proof -Verify 
 
 $fullOuputDir = [System.IO.Path]::Combine($CircuitDir, $OutputDir)
 $circomFile = -join($CircuitName,".circom")
@@ -24,12 +24,15 @@ $r1csFile = -join($CircuitName,".r1cs")
 $witnessFileFullPath = [System.IO.Path]::Combine($fullOuputDir, "witness.wtns")
 
 $jsDir = [System.IO.Path]::Combine($fullOuputDir, -join($CircuitName, "_js"))
-# Remove the build directory
-if(Test-Path $fullOuputDir)
-{
-    Remove-Item -Recurse -Force $fullOuputDir | Out-Null
+
+if($Compile){
+    # Remove the build directory
+    if(Test-Path $fullOuputDir)
+    {
+        Remove-Item -Recurse -Force $fullOuputDir | Out-Null
+    }
+    New-Item -ItemType Directory -Path $fullOuputDir -Force | Out-Null
 }
-New-Item -ItemType Directory -Path $fullOuputDir -Force | Out-Null
 
 $circomFilePath = [System.IO.Path]::Combine($CircuitDir, $circomFile)
 $inputFilePath = [System.IO.Path]::Combine($CircuitDir, $InputFile)
@@ -60,13 +63,13 @@ function Start-CompileCircuit {
 
 function Start-GenerateWitness {
     # Generate the witness
-    
     node "$jsDir/generate_witness.js" "$jsDir/$wasmFile" $inputFilePath $witnessFileFullPath
     Test-LastCommadExecution "Failed to generate the witness."
 }
 
-function Start-TrustedSetup(){
-    # Run the snarkjs command and capture its output
+function Start-Phase1(){
+    # Extract the ceremony size
+    # Run the snarkjs info command and capture its output
     $output = snarkjs r1cs info "$fullOuputDir/$r1csFile"
     Test-LastCommadExecution "Failed to get the number of constraints."
     # Extract the line containing the number of constraints
@@ -82,53 +85,50 @@ function Start-TrustedSetup(){
         Write-Error "Could not find the number of constraints."
         exit 1
     }
-
     # Double the number of constraints
     $doubledConstraints = $constraintsNumber * 2
     # Calculate the exponent of the smallest power of two greater than or equal to the doubled number
     $cerimonySize = [Math]::Ceiling([Math]::Log($doubledConstraints, 2))
     Write-Host "Cerimony size: $cerimonySize"
 
-    # Perform the trusted setup
+    # Perform the trusted setup (Starting the Power of Tau ceremony)
     Write-Host "Performing the trusted setup..."
     snarkjs powersoftau new bn128 $cerimonySize $fullOuputDir/powersOfTau_0000.ptau
     Test-LastCommadExecution "Failed to perform the trusted setup."
 
-    # Generate a random string and use it as a seed for the contribution
+    # Generate a random string to be used as a seed for the contribution
     $seed = [System.Guid]::NewGuid().ToString("N")
     $challengeFile = "$fullOuputDir/powersOfTau_0000.ptau"
     $responseFile = "$fullOuputDir/powersOfTau_0001.ptau"
     $contributorName = "First Contributor"
 
-    Write-Host "Generating the first contribution..."
+    # Making the first contribution
+    Write-Host "Making the first contribution..."
     snarkjs powersoftau contribute $challengeFile $responseFile --name="$contributorName" --entropy="$seed"
-    Test-LastCommadExecution "Failed to generate the first contribution."
-    
+    Test-LastCommadExecution "Failed to make the first contribution."
+}
+
+function Start-Phase2{
+    # Starting phase2
     Write-Host "Preparing Phase2..."
     snarkjs powersoftau prepare phase2 $fullOuputDir/powersOfTau_0001.ptau $fullOuputDir/final.ptau
     Test-LastCommadExecution "Failed to prepare phase2."
-}
 
-function Start-GenerateSnarkProof {
-    # Generate the snark proof
-    Write-Host "Generating the snark proof..."
+    # Generate the .zkey file
+    Write-Host "Generating the .zkey file..."
     snarkjs groth16 setup "$fullOuputDir/$r1csFile" $fullOuputDir/final.ptau $fullOuputDir/circuit_0000.zkey
-    Test-LastCommadExecution "Failed to generate the snark proof."
-}
+    Test-LastCommadExecution "Failed to generate the .zkey file."
 
-function Start-ZKeyContribute {
-    # Build the verification key
+    # Make the contribution to phase 2
     Write-Host "Building the verification key..."
     $seed = [System.Guid]::NewGuid().ToString("N")
     snarkjs zkey contribute $fullOuputDir/circuit_0000.zkey $fullOuputDir/circuit_final.zkey --name="ZK_DIGSIG_KYC" --entropy="$seed"
     Test-LastCommadExecution "Failed to build the verification key."
-}
 
-function Start-ZKeyExport {
-    # Export the verifier
-    Write-Host "Exporting the verifier..."
+    # Export the verification key
+    Write-Host "Exporting the verification key..."
     snarkjs zkey export verificationkey $fullOuputDir/circuit_final.zkey $fullOuputDir/verification_key.json
-    Test-LastCommadExecution "Failed to export the verifier."
+    Test-LastCommadExecution "Failed to export the verification key."
 }
 
 function Start-GenerateProof{
@@ -153,27 +153,29 @@ function Start-GenerateSolidyVerifier {
 }
 
 
-# Compile the circuit
-function Start-Compilation{
-    # 1. Compile the circuit
-    Start-CompileCircuit
-    # 2. Generate the witness
-    Start-GenerateWitness
-    # 3. Perform the trusted setup
-    Start-TrustedSetup
-    # 4. Generate .zkey files
-    Start-GenerateSnarkProof
-    Start-ZKeyContribute
-    Start-ZKeyExport
-    # 5. Generate the snark proof
-    Start-GenerateProof
-    # 6. Build the verification key
-    Start-VerifyProof
-
+function Start-Process{
+    if($Compile){
+        Start-CompileCircuit
+        Start-GenerateWitness
+        Write-Host "OK"
+    }
+    if($Setup){
+        Start-Phase1
+        Start-Phase2
+        Write-Host "OK"
+    }
     if($Solidity){
-        # (OPT) Generate the solidity verifier
         Start-GenerateSolidyVerifier
+        Write-Host "OK"
+    }
+    if($Proof){
+        Start-GenerateProof
+        Write-Host "OK"
+    }
+    if($Verify){
+        Start-VerifyProof
+        Write-Host "OK"
     }
 }
 
-Start-Compilation
+Start-Process

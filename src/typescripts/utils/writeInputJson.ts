@@ -3,19 +3,36 @@ import Common from "@utils/common";
 import FormatHandler from "@signature/formatHandler";
 import pkcs7data from "@signature/pkcs7Handler";
 
-const data = "GRDNNA66L65B034A";
-const salt = "L0ngR4nd0mS4ltSup3rS3cur3!";
+export default class WriteInputJson {
+  private data: string;
+  private salt: string;
+  private p7mPath: string;
+  private cerPath: string;
+  private pemPath: string;
+  private outputPath: string;
 
-const formattedDataForCircuit = new FormatHandler(
-  new pkcs7data(
-    Common.readFileToBinaryBuffer("../../files/kyc.txt.p7m"),
-    Common.readFileToBinaryBuffer("../../files/ArubaPECS.p.A.NGCA3.cer"),
-    Common.readFileToUTF8String("../../files/JudgePublicKey.pem")
-  ).getPkcs7DataForZkpKyc(),
-  512,
-  2048,
-  RSA.packMessage(salt, data),
-  RSA.packMessageAndPad(salt, data)
-).getFormattedDataForKzpCircuit();
+  constructor(data: string, salt: string, p7mPath: string, cerPath: string, pemPath: string, outputPath: string) {
+    this.data = data;
+    this.salt = salt;
+    this.p7mPath = p7mPath;
+    this.cerPath = cerPath;
+    this.pemPath = pemPath;
+    this.outputPath = outputPath;
+    this.writeInputJson();
+  }
 
-Common.writeFile("../../circuits/ZkpKycDigSig/input.json", JSON.stringify(formattedDataForCircuit, null, 2));
+  private writeInputJson(): void {
+    const formattedDataForCircuit = new FormatHandler(
+      new pkcs7data(
+        Common.readFileToBinaryBuffer(this.p7mPath),
+        Common.readFileToBinaryBuffer(this.cerPath),
+        Common.readFileToUTF8String(this.pemPath)
+      ).getPkcs7DataForZkpKyc(),
+      512,
+      2048,
+      RSA.packMessage(this.salt, this.data),
+      RSA.packMessageAndPad(this.salt, this.data)
+    ).getFormattedDataForKzpCircuit();
+    Common.writeFile(this.outputPath, JSON.stringify(formattedDataForCircuit, null, 2));
+  }
+}
