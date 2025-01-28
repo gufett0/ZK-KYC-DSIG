@@ -4,15 +4,6 @@
 
 ---
 
-## Features
-
-- **Privacy-Preserving**: Zero-Knowledge Proof ensures only essential information is disclosed.
-- **Digital Signature**: Guarantees the identiy of the user as well as authenticity and integrity of the data.
-- **eIDAS-2 Compliant**: Aligned with the upcoming standard for electronic identification and trust services.
-- **Automated Testing**: Simple npm scripts for usage.
-
----
-
 ## Getting Started
 
 Use the following commands to test the circuit:
@@ -38,3 +29,10 @@ Use the following commands to test the circuit:
 All test runs will generate a report (in xml) format in the `reports` folder. **Please note** that every time a test is run, the report is overwritten.
 
 ---
+
+## Features
+
+- **Privacy-Preserving**: Zero-Knowledge Proof ensures only essential information is disclosed.
+- **Digital Signature**: Guarantees the identiy of the user as well as authenticity and integrity of the data.
+- **eIDAS-2 Compliant**: Aligned with the upcoming standard for electronic identification and trust services.
+- **Automated Testing**: Simple npm scripts for usage.
