@@ -21,7 +21,10 @@ Use the following commands to test the circuit:
 
 > npm run test:full
 
+#### 2. Prove and Verify Tests
+
 > npm run test:one
+
 > npm run test:two
 
 **Note**1: Ensure the `/src/circuits/test_1/` and `/src/circuits/test_2/` folders exist before running tests. They are needed for the `test:one` and `test:two` commands.
@@ -33,17 +36,3 @@ Use the following commands to test the circuit:
 All test runs will generate a report (in xml) format in the `reports` folder. **Please note** that every time a test is run, the report is overwritten.
 
 ---
-
-## Project Structure
-
-.
-├─ src
-│---└─ circuits
-│-------├─ build # Output of npm run test:full
-│-------├─ templates # Templates used by the main circuit
-│-------├─ test_1 # Output of npm run test:one
-│-------├─ test_2 # Output of npm run test:two
-│---├─ typescripts # Code
-├─ reports # XML test reports (overwritten after each test)
-├─ GenerateProofAndVerifyIt.ps1 # Powershell script
-└─ README.md # This file
