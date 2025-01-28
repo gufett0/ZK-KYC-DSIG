@@ -8,20 +8,33 @@ param(
     [switch] $Setup,
     [switch] $Solidity,
     [switch] $Proof,
-    [switch] $Verify
+    [switch] $Verify,
+    [switch] $Test1,
+    [switch] $Test2
 )
 
 $env:NODE_OPTIONS = "--max-old-space-size=12288"
 
 #Example of how to call the script
-#.\GenerateProofAndVerifyIt.ps1 -CircuitName "ZkpKycDigSig" -CircuitDir ".\src\circuits\" -Compile -Setup -Solidity -Proof -Verify 
+#.\GenerateProofAndVerifyIt.ps1 -CircuitName "ZkpKycDigSig" -CircuitDir ".\src\circuits\" -Compile -Setup -Solidity -Proof -Verify -Test1
+
+if($Test1 -and $Test2)
+{
+    Write-Error "You cannot use Test1 and Test2 flags at the same time."
+    exit 1
+}
 
 $fullOuputDir = [System.IO.Path]::Combine($CircuitDir, $OutputDir)
+$fullOuputDirTest1 = [System.IO.Path]::Combine($CircuitDir, "test_1")
+$fullOuputDirTest2 = [System.IO.Path]::Combine($CircuitDir, "test_2")
+
 $circomFile = -join($CircuitName,".circom")
 $wasmFile = -join($CircuitName,".wasm")
 $r1csFile = -join($CircuitName,".r1cs")
 
 $witnessFileFullPath = [System.IO.Path]::Combine($fullOuputDir, "witness.wtns")
+$witnessFileFullPathTest1 = [System.IO.Path]::Combine($fullOuputDirTest1, "witness.wtns")
+$witnessFileFullPathTest2 = [System.IO.Path]::Combine($fullOuputDirTest2, "witness.wtns")
 
 $jsDir = [System.IO.Path]::Combine($fullOuputDir, -join($CircuitName, "_js"))
 
@@ -35,7 +48,10 @@ if($Compile){
 }
 
 $circomFilePath = [System.IO.Path]::Combine($CircuitDir, $circomFile)
+
 $inputFilePath = [System.IO.Path]::Combine($CircuitDir, $InputFile)
+$inputFilePathTest1 = [System.IO.Path]::Combine($CircuitDir,"test_1", $InputFile)
+$inputFilePathTest2 = [System.IO.Path]::Combine($CircuitDir,"test_2", $InputFile)
 
 # Test if the circuit file exists
 if (-not (Test-Path $circomFilePath))
@@ -57,13 +73,29 @@ function Test-LastCommadExecution {
 
 function Start-CompileCircuit {
     # Compile the circuit
+    Write-Host "Compiling the circuit..."
     circom $circomFilePath --r1cs --wasm --sym -o $fullOuputDir -l $NodeModulesDir
     Test-LastCommadExecution "Failed to compile the circuit."
 }
 
 function Start-GenerateWitness {
     # Generate the witness
-    node "$jsDir/generate_witness.js" "$jsDir/$wasmFile" $inputFilePath $witnessFileFullPath
+    Write-Host "Generating the witness..."
+    if($Test1 -or $Test2) 
+    {
+        if($Test1)
+        {
+            node "$jsDir/generate_witness.js" "$jsDir/$wasmFile" $inputFilePathTest1 $witnessFileFullPathTest1
+        }
+        if($Test2)
+        {
+            node "$jsDir/generate_witness.js" "$jsDir/$wasmFile" $inputFilePathTest2 $witnessFileFullPathTest2
+        }
+    }
+    else
+    {
+        node "$jsDir/generate_witness.js" "$jsDir/$wasmFile" $inputFilePath $witnessFileFullPath
+    }
     Test-LastCommadExecution "Failed to generate the witness."
 }
 
@@ -134,18 +166,46 @@ function Start-Phase2{
 function Start-GenerateProof{
     # Generate the Proof:
     Write-Host "Generating the proof..."
-    snarkjs groth16 prove $fullOuputDir/circuit_final.zkey $witnessFileFullPath $fullOuputDir/proof.json $fullOuputDir/public.json
+    if($Test1 -or $Test2) 
+    {   
+        if($Test1)
+        {
+            snarkjs groth16 prove $fullOuputDir/circuit_final.zkey $witnessFileFullPathTest1 $fullOuputDirTest1/proof.json $fullOuputDirTest1/public.json
+        }
+        if($Test2)
+        {
+            snarkjs groth16 prove $fullOuputDir/circuit_final.zkey $witnessFileFullPathTest2 $fullOuputDirTest2/proof.json $fullOuputDirTest2/public.json
+        }
+    }
+    else
+    {
+        snarkjs groth16 prove $fullOuputDir/circuit_final.zkey $witnessFileFullPath $fullOuputDir/proof.json $fullOuputDir/public.json
+    }
     Test-LastCommadExecution "Failed to generate the proof."
 }
 
 function Start-VerifyProof {
     # Verify the proof
     Write-Host "Verifying the proof..."
-    snarkjs groth16 verify $fullOuputDir/verification_key.json $fullOuputDir/public.json $fullOuputDir/proof.json
-    Test-LastCommadExecution "Failed to verify the proof."   
+    if($Test1 -or $Test2) 
+    {   
+        if($Test1)
+        {
+            snarkjs groth16 verify $fullOuputDir/verification_key.json $fullOuputDirTest1/public.json $fullOuputDirTest1/proof.json
+        }
+        if($Test2)
+        {
+            snarkjs groth16 verify $fullOuputDir/verification_key.json $fullOuputDirTest2/public.json $fullOuputDirTest2/proof.json
+        }
+    }
+    else
+    {
+        snarkjs groth16 verify $fullOuputDir/verification_key.json $fullOuputDir/public.json $fullOuputDir/proof.json
+    }
+    Test-LastCommadExecution "Failed to verify the proof."
 }
 
-function Start-GenerateSolidyVerifier {
+function Start-GenerateSolidityVerifier {
     # Generate the solidity verifier
     Write-Host "Generating the solidity verifier..."
     snarkjs zkey export solidityverifier $fullOuputDir/circuit_final.zkey $fullOuputDir/verifier.sol
@@ -156,7 +216,6 @@ function Start-GenerateSolidyVerifier {
 function Start-Process{
     if($Compile){
         Start-CompileCircuit
-        Start-GenerateWitness
         Write-Host "OK"
     }
     if($Setup){
@@ -165,10 +224,11 @@ function Start-Process{
         Write-Host "OK"
     }
     if($Solidity){
-        Start-GenerateSolidyVerifier
+        Start-GenerateSolidityVerifier
         Write-Host "OK"
     }
     if($Proof){
+        Start-GenerateWitness
         Start-GenerateProof
         Write-Host "OK"
     }

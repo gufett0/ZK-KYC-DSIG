@@ -7,8 +7,10 @@
     "doc": "docs"
   },
   "scripts": {
+    "test:one": "jest /src/typescripts/__tests__/proveAndVerify.test.ts",
+    "test:two": "jest /src/typescripts/__tests__/proveAndVerifyNew.test.ts",
+    "test:full": "jest /src/typescripts/__tests__/full.test.ts",
     "test": "jest --testPathIgnorePatterns full.test.ts",
-    "test:fullOnly": "jest /src/typescripts/__tests__/full.test.ts",
     "build": "tsc",
     "dev": "nodemon",
     "start": "node ./dist/main.js",

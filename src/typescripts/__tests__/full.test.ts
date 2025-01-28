@@ -3,7 +3,7 @@ import ExecuteScriptForTest from "@/utils/executescriptfortest";
 import WriteInputJson from "@/utils/writeinputjson";
 import logger from "@/utils/logger";
 
-describe("Compile", () => {
+describe("FullTest", () => {
   let scriptPath: string;
   let circuitPath: string;
   let circuitName: string;
@@ -26,7 +26,7 @@ describe("Compile", () => {
       path.resolve(__dirname, pemPath),
       path.resolve(__dirname, outputPath)
     );
-    logger.info("Beware: the tests will take a long time (up to 15 hours) to complete");
+    logger.info("Beware: the tests will take a long time (up to 30 hours) to complete");
     logger.info("Starting tests");
   });
   beforeEach(() => {});
@@ -38,7 +38,7 @@ describe("Compile", () => {
   });
   //The tests must be executed in order
   test(
-    "Compile the circuit and generate witness",
+    "Compile the circuit",
     (done) => {
       logger.info("Compile");
       ExecuteScriptForTest.runScript(
@@ -47,7 +47,7 @@ describe("Compile", () => {
         done
       );
     },
-    20 * 60 * 1000
+    30 * 60 * 1000
   );
   test(
     "Perform setup (phase 1 and phase 2)",
@@ -59,7 +59,7 @@ describe("Compile", () => {
         done
       );
     },
-    24 * 60 * 60 * 1000
+    48 * 60 * 60 * 1000
   );
   test(
     "Generate solidity verifier",
@@ -71,10 +71,10 @@ describe("Compile", () => {
         done
       );
     },
-    10 * 60 * 1000
+    30 * 60 * 1000
   );
   test(
-    "Generate proof",
+    "Generate proof and witness",
     (done) => {
       logger.info("Proof");
       ExecuteScriptForTest.runScript(
@@ -83,7 +83,7 @@ describe("Compile", () => {
         done
       );
     },
-    20 * 60 * 1000
+    30 * 60 * 1000
   );
   test(
     "Verify proof",
@@ -95,6 +95,6 @@ describe("Compile", () => {
         done
       );
     },
-    10 * 60 * 100
+    30 * 60 * 100
   );
 });
