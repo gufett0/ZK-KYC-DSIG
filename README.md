@@ -20,33 +20,19 @@ Use the following commands to test the circuit:
 #### 1. Full Test
 
 > npm run test:full
-> This command will put the output in the circuits/build folder:
-> Compiles the circuit
-> Performs the setup
-> Generates the Solidity verifier
-> Generates the witness
-> Generates the proof
-> Verifies the proof
-> Creates a new report under the reports folder
 
 > npm run test:one
 > npm run test:two
-> These 2 commands must be run after the test:full command and their output will be put in test_1 and test_2 fodler respectively
-> Generates the witness
-> Generates the proof
-> Verifies the proof
-> Creates a new report under the reports folder
 
-**Note**1: Ensure the `/src/circuits/test_1/` and `/src/circuits/test_2/` folders exist before running tests.
+**Note**1: Ensure the `/src/circuits/test_1/` and `/src/circuits/test_2/` folders exist before running tests. They are needed for the `test:one` and `test:two` commands.
+**Note**2: The `test:full` command: Compiles the circuit, Performs the setup, Generates the Solidity verifier, Generates the proof, Generates the witness, Verifies the proof and Creates a report.
+**Note**3: The `test:one` and `test:two` commands must be run after having run the `test:full` command at least once since they only do the following: Generate the witness, Generate the proof, Verify the proof and Create a report.
 
-## Reports
+#### Reports
 
 All test runs will generate a report (in xml) format in the `reports` folder. **Please note** that every time a test is run, the report is overwritten.
 
-In order to test the circuit use the following commands:
---> npm run test:full === this test compile the circuit, perform the setup, generate the solidity verifier, generate the witness, generate the proof, verify the proof
---> npm run test:one === this test generate the witness, generate the proof, verify the proof with the same data as the full test
---> npm run test:two === this test generate the witness, generate the proof, verify the proof with the same data with new data
+---
 
 ## Project Structure
 
