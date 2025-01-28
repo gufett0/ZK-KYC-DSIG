@@ -28,7 +28,9 @@ Use the following commands to test the circuit:
 > npm run test:two
 
 **Note**1: Ensure the `/src/circuits/test_1/` and `/src/circuits/test_2/` folders exist before running tests. They are needed for the `test:one` and `test:two` commands.
+
 **Note**2: The `test:full` command: Compiles the circuit, Performs the setup, Generates the Solidity verifier, Generates the proof, Generates the witness, Verifies the proof and Creates a report.
+
 **Note**3: The `test:one` and `test:two` commands must be run after having run the `test:full` command at least once since they only do the following: Generate the witness, Generate the proof, Verify the proof and Create a report.
 
 #### Reports
