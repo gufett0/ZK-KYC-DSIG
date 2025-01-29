@@ -18,15 +18,25 @@ Use the following commands to test the circuit:
 
 > npm run test:two
 
-**Note**1: Ensure the `/src/circuits/test_1/` and `/src/circuits/test_2/` folders exist before running tests. They are needed for the `test:one` and `test:two` commands.
+**Note**: Ensure the `/src/circuits/test_1/` and `/src/circuits/test_2/` folders exist before running tests. They are needed for the `test:one` and `test:two` commands.
 
-**Note**2: The `test:full` command: Compiles the circuit, Performs the setup, Generates the Solidity verifier, Generates the proof, Generates the witness, Verifies the proof and Creates a report.
+**Note**: The `test:full` command: Compiles the circuit, Performs the setup, Generates the Solidity verifier, Generates the proof, Generates the witness, Verifies the proof and Creates a report.
 
-**Note**3: The `test:one` and `test:two` commands must be run after having run the `test:full` command at least once since they only do the following: Generate the witness, Generate the proof, Verify the proof and Create a report.
+**Note**: The `test:one` and `test:two` commands must be run after having run the `test:full` command at least once since they only do the following: Generate the witness, Generate the proof, Verify the proof and Create a report.
 
 #### Reports
 
 All test runs will generate a report (in xml) format in the `reports` folder. **Please note** that every time a test is run, the report is overwritten.
+
+#### 3. Testing the proof verification on chain
+
+Run the following command in the build folder where all the zkp files have been generated.
+
+> snarkjs generatecall
+
+It will create the inputs for the contract call.
+
+**Note**: The contract allow users to securely deposit ETH, verify their identity using ZK-SNARK proofs, check the verification status and withdraw ETH after a successful verification.
 
 ---
 
