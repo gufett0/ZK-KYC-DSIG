@@ -1,6 +1,6 @@
 import Static from "@utils/static";
 import logger from "@/utils/logger";
-import { readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import crypto from "crypto";
 import forge from "node-forge";
 
@@ -123,5 +123,9 @@ export default class Common extends Static {
       }
     }
     return bitArray;
+  }
+
+  public static checkFileExists(filePath: string): boolean {
+    return existsSync(filePath);
   }
 }

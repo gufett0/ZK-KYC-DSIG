@@ -4,6 +4,11 @@
 
 ---
 
+## Requirements:
+
+- **Operating System**: Windows 10 or later (this project uses Powershell scripts .ps1)
+- **Node.js and npm**: LTS version
+
 ## Getting Started
 
 Use the following commands to test the circuit:
@@ -37,6 +42,10 @@ Run the following command in the build folder where all the zkp files have been 
 It will create the inputs for the contract call.
 
 **Note**: The contract allow users to securely deposit ETH, verify their identity using ZK-SNARK proofs, check the verification status and withdraw ETH after a successful verification.
+
+#### 4. Generating a CA certificate and signing a file for testing
+
+> npm run test:create
 
 ---
 

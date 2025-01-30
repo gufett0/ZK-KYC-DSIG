@@ -3,7 +3,7 @@ import ExecuteScriptForTest from "@/utils/executescriptfortest";
 import WriteInputJson from "@/utils/writeinputjson";
 import logger from "@/utils/logger";
 
-describe("FullTest", () => {
+describe("ProveAndVerifyTwo", () => {
   let scriptPath: string;
   let circuitPath: string;
   let circuitName: string;
