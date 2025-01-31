@@ -7,7 +7,13 @@ param(
 )
 
 function Generate-RootCA {
-    # Create Root CA and export
+    $certificateFile = "$RootCAPath\RootCA.cer"
+
+    if (Test-Path $certificateFile) {
+        Write-Host "OK"
+        return
+    }
+    
     $ca = New-SelfSignedCertificate -Type Custom `
         -KeyAlgorithm RSA -KeyLength 2048 `
         -Subject "CN=CustomRootCA" `
@@ -15,7 +21,8 @@ function Generate-RootCA {
         -KeyExportPolicy Exportable `
         -NotAfter (Get-Date).AddYears(10) `
         -TextExtension "2.5.29.19={critical}{text}ca=true&pathlength=0"
-    Export-Certificate -Cert $ca -FilePath "$RootCAPath\RootCA.cer"
+    Export-Certificate -Cert $ca -FilePath $certificateFile
+    Write-Host "OK"
 }
 
 function Generate-UserCertAndSign {
