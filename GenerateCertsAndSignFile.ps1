@@ -1,53 +1,73 @@
 param(
-    [switch]$CertificateCA,  # Generate Root CA
-    [switch]$Sign,           # Generate user certificate and sign document
-    [string]$FiscalCode,     # Person's fiscal code
-    [string]$RootCAPath,     # Root CA storage/lookup path
-    [string]$DocumentPath    # Document path for signing
+    [string]$FiscalCode,
+    [string]$FilesPath,
+    [string]$DocumentPath
 )
 
 function Generate-RootCA {
-    $certificateFile = "$RootCAPath\RootCA.cer"
+    $rootCAKeyFile = Join-Path $FilesPath "RootCA.key"
+    $rootCAPemFile = Join-Path $FilesPath "RootCA.pem"
+    $rootCACerFile = Join-Path $FilesPath "RootCA.cer"
 
-    if (Test-Path $certificateFile) {
-        Write-Host "OK"
+    if (Test-Path $rootCACerFile) {
+        Write-Host "Root CA already exists. Skipping generation."
         return
     }
-    
-    $ca = New-SelfSignedCertificate -Type Custom `
-        -KeyAlgorithm RSA -KeyLength 2048 `
-        -Subject "CN=CustomRootCA" `
-        -CertStoreLocation "Cert:\CurrentUser\My" `
-        -KeyExportPolicy Exportable `
-        -NotAfter (Get-Date).AddYears(10) `
-        -TextExtension "2.5.29.19={critical}{text}ca=true&pathlength=0"
-    Export-Certificate -Cert $ca -FilePath $certificateFile
-    Write-Host "OK"
+
+    Write-Host "Generating new Root CA..."
+
+    openssl genpkey -out $rootCAKeyFile -algorithm RSA -pkeyopt rsa_keygen_bits=2048
+
+    openssl req -x509 -new -nodes `
+        -key $rootCAKeyFile `
+        -sha256 -days 3650 `
+        -subj "/CN=CustomRootCA" `
+        -out $rootCAPemFile
+
+    openssl x509 -in $rootCAPemFile -outform DER -out $rootCACerFile
+
+    Write-Host "Root CA generation complete."
 }
 
 function Generate-UserCertAndSign {
-    # Import Root CA and create user cert
-    $root = Import-Certificate -FilePath "$RootCAPath\RootCA.cer"
-    $prefixFC = "TINIT-$FiscalCode"
-    $userCert = New-SelfSignedCertificate -Type Custom `
-        -KeyAlgorithm RSA -KeyLength 2048 `
-        -Subject "CN=UserCert" `
-        -Signer $root `
-        -CertStoreLocation "Cert:\CurrentUser\My" `
-        -NotAfter (Get-Date).AddYears(5) `
-        -TextExtension "2.5.29.17={text}email=$prefixFC"
+    Write-Host "Generating user certificate and signing file..."
 
-    # Sign document -> p7m
-    $data = [System.IO.File]::ReadAllBytes($DocumentPath)
-    $signed = New-Object System.Security.Cryptography.Pkcs.SignedCms
-    $signed.ContentInfo = New-Object System.Security.Cryptography.Pkcs.ContentInfo($data)
-    $signer = New-Object System.Security.Cryptography.Pkcs.CmsSigner($userCert)
-    $signed.ComputeSignature($signer)
-    [System.IO.File]::WriteAllBytes("$DocumentPath.p7m", $signed.Encode())
+    $userKeyFile = Join-Path $FilesPath "User-$FiscalCode.key"
+    $userCsrFile = Join-Path $FilesPath "User-$FiscalCode.csr"
+    $userCertFile = Join-Path $FilesPath "User-$FiscalCode.crt"
+
+    $rootCAKeyFile = Join-Path $FilesPath "RootCA.key"
+    $rootCAPemFile = Join-Path $FilesPath "RootCA.pem"
+
+    openssl genpkey -out $userKeyFile -algorithm RSA -pkeyopt rsa_keygen_bits=2048
+
+    openssl req -new `
+        -key $userKeyFile `
+        -subj "/CN=UserCert/emailAddress=TINIT-$FiscalCode" `
+        -out $userCsrFile
+
+    openssl x509 -req `
+        -in $userCsrFile `
+        -CA $rootCAPemFile -CAkey $rootCAKeyFile -CAcreateserial `
+        -out $userCertFile -days 1825 -sha256
+
+    $signedFilePath = "$DocumentPath.p7m"
+
+    openssl smime -sign -binary `
+        -in $DocumentPath `
+        -signer $userCertFile `
+        -inkey $userKeyFile `
+        -certfile $rootCAPemFile `
+        -outform DER `
+        -out $signedFilePath
+
+    Write-Host "File signed successfully -> $signedFilePath"
 }
 
-if ($CertificateCA) { Generate-RootCA }
-
-if ($Sign -and $FiscalCode -and $RootCAPath -and $DocumentPath) {
+function Start-Process {
+    Generate-RootCA
     Generate-UserCertAndSign
+    Write-Host "Script complete."
 }
+
+Start-Process

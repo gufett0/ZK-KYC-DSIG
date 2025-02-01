@@ -8,6 +8,7 @@
 
 - **Operating System**: Windows 10 or later (this project uses Powershell scripts .ps1)
 - **Node.js and npm**: LTS version
+- **OpenSSL**: You need to have OpenSSL installed
 
 ## Getting Started
 

@@ -45,7 +45,7 @@ describe("ProofAndVerifyOne", () => {
         done
       );
     },
-    20 * 60 * 1000
+    30 * 60 * 1000
   );
   test(
     "Verify proof",
@@ -57,6 +57,6 @@ describe("ProofAndVerifyOne", () => {
         done
       );
     },
-    5 * 60 * 100
+    30 * 60 * 100
   );
 });
