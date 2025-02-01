@@ -5,8 +5,14 @@ import logger from "@/utils/logger";
 
 describe("CreateFileAndSign", () => {
   let scriptPath: string;
+  let fiscalCode: string;
+  let filesPath: string;
+  let txtPath: string;
   beforeAll(() => {
     scriptPath = path.join(__dirname, "../../../", "./GenerateCertsAndSignFile.ps1");
+    fiscalCode = "SVNMTT98E15B034I";
+    filesPath = "../../../files/two/";
+    txtPath = "../../../files/two/data.txt";
     logger.info("Starting tests");
   });
   beforeEach(() => {});
@@ -19,11 +25,9 @@ describe("CreateFileAndSign", () => {
   test(
     "Write file",
     (done) => {
-      const data = "SVNMTT98E15B034I";
       const salt = "L0ngR4nd0mS4ltSup3rS3cur3!";
-      const pemPath = "../../../files/JudgePublicKey.pem";
-      const outputPath = "../../../files/data.txt";
-      new WriteTxt(data, salt, path.resolve(__dirname, pemPath), path.resolve(__dirname, outputPath));
+      const pemPath = "../../../files/two/JudgePublicKey.pem";
+      new WriteTxt(fiscalCode, salt, path.resolve(__dirname, pemPath), path.resolve(__dirname, txtPath));
       done();
     },
     5 * 60 * 1000
@@ -32,15 +36,18 @@ describe("CreateFileAndSign", () => {
     "Generate certificate of CA",
     (done) => {
       logger.info("CA Cert");
-      ExecuteScriptForTest.runScript(scriptPath, [], done);
-    },
-    5 * 60 * 1000
-  );
-  test(
-    "Sign file",
-    (done) => {
-      logger.info("Sign");
-      ExecuteScriptForTest.runScript(scriptPath, [], done);
+      ExecuteScriptForTest.runScript(
+        scriptPath,
+        [
+          "-FiscalCode",
+          fiscalCode,
+          "-FilesPath",
+          path.resolve(__dirname, filesPath),
+          "-DocumentPath",
+          path.resolve(__dirname, txtPath),
+        ],
+        done
+      );
     },
     5 * 60 * 1000
   );

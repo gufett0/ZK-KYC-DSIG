@@ -8,12 +8,12 @@ describe("ProveAndVerifyTwo", () => {
   let circuitPath: string;
   let circuitName: string;
   beforeAll(() => {
-    const data = "GRDNNA66L65B034A";
+    const data = "SVNMTT98E15B034I";
     const salt = "L0ngR4nd0mS4ltSup3rS3cur3!";
-    const p7mPath = "../../../files/kyc.txt.p7m";
-    const cerPath = "../../../files/ArubaPECS.p.A.NGCA3.cer";
-    const pemPath = "../../../files/JudgePublicKey.pem";
-    const outputPath = "../../circuits/test_1/input.json";
+    const p7mPath = "../../../files/two/data.txt.p7m";
+    const cerPath = "../../../files/two/RootCA.cer";
+    const pemPath = "../../../files/two/JudgePublicKey.pem";
+    const outputPath = "../../circuits/test_2/input.json";
     scriptPath = path.join(__dirname, "../../../", "./GenerateProofAndVerifyIt.ps1");
     circuitPath = path.join(__dirname, "../../../", "./src/circuits/");
     circuitName = "ZkpKycDigSig";
@@ -41,7 +41,7 @@ describe("ProveAndVerifyTwo", () => {
       logger.info("Proof");
       ExecuteScriptForTest.runScript(
         scriptPath,
-        ["-CircuitName", "ZkpKycDigSig", "-CircuitDir", circuitPath, "-Proof", "-Test1"],
+        ["-CircuitName", "ZkpKycDigSig", "-CircuitDir", circuitPath, "-Proof", "-Test2"],
         done
       );
     },
@@ -53,7 +53,7 @@ describe("ProveAndVerifyTwo", () => {
       logger.info("Verify");
       ExecuteScriptForTest.runScript(
         scriptPath,
-        ["-CircuitName", "ZkpKycDigSig", "-CircuitDir", circuitPath, "-Verify", "-Test1"],
+        ["-CircuitName", "ZkpKycDigSig", "-CircuitDir", circuitPath, "-Verify", "-Test2"],
         done
       );
     },

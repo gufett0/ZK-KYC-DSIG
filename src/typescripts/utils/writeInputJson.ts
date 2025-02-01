@@ -2,6 +2,7 @@ import RSA from "@utils/rsa";
 import Common from "@utils/common";
 import FormatHandler from "@signature/formatHandler";
 import pkcs7data from "@signature/pkcs7Handler";
+import logger from "./logger";
 
 export default class WriteInputJson {
   private data: string;
