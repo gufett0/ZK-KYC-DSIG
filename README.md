@@ -12,7 +12,7 @@
 
 ## Getting Started
 
-The order in which run the commands linearly are:
+The order in which to call the commands for a linear execution are:
 
 > npm run test:full
 > npm run test:one
@@ -30,9 +30,17 @@ Use the following commands to test this repo:
 
 #### 1. Full Test
 
+This command makes a complete run from compilation and setup of the zkp circuit until proof generation and verification.
+
 > npm run test:full
 
+**Note**: It is mandatory for the first time at least.
+
+**Note**: It could require up to 30 hours and generate up to 20GB of data.
+
 #### 2. Prove and Verify Tests
+
+These commands run a simple prove generation and verification with 2 sets of data.
 
 > npm run test:one
 
@@ -49,6 +57,8 @@ Use the following commands to test this repo:
 The following test will create a file with a user fiscal code, generate a CA certificate, generate a user certificate and sign the file.
 
 > npm run test:create
+
+**Note**: It refers to the data used for the command `npm run test:two`.
 
 #### 4. Reports
 
