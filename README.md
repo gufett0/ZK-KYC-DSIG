@@ -1,6 +1,6 @@
 # Master-final-thesis ZK-KYC-DSIG
 
-## **ZK-KYC-DSIG: An eIDAS-2 compliant identity verification solution with Zero Knowledge Proof and Digital Signature**
+## **ZK-KYC-DSIG: An eIDAS2 Compliant Privacy Preserving Identity Verification Framework via Zero Knowledge Proof and Digital Signature**
 
 ---
 
