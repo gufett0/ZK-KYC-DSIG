@@ -15,15 +15,21 @@
 The order in which to call the commands for a linear execution are:
 
 > npm run test:full
+
 > npm run test:one
+
 > npm run test:create
+
 > npm run test:two
 
 or
 
 > npm run test:full
+
 > npm run test:create
+
 > npm run test:one
+
 > npm run test:two
 
 Use the following commands to test this repo:
