@@ -88,7 +88,7 @@ It will create the inputs for the contract call.
 ## Features
 
 - **Privacy-Preserving**: No information of the user is disclosed.
-- **Digital Signature**: Guarantees identiy of the user as well as authenticity and integrity of the data.
-- **eIDAS-2 Compliant**: Aligned with the EU regulation.
+- **Digital Signature**: Guarantees identity of the user as well as authenticity and integrity of the data.
+- **eIDAS-2 Compliant**: Aligned with the EU regulations.
 - **SSI Principles**: Aligned with the SSI principles.
 - **Automated Testing**: Simple npm scripts for usage.
