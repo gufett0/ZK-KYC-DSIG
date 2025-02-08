@@ -8,7 +8,7 @@
 
 - **Operating System**: Windows 10 or later (this project uses Powershell scripts .ps1)
 - **Node.js and npm**: LTS version
-- **OpenSSL**: You need to have OpenSSL version 3 or higher installed
+- **OpenSSL**: You need to have OpenSSL version 3 or higher installed (and the environment variables correctly set)
 - **Other**: Set the Execution Policy of the OS in order to allow the usage of the Powershell scripts (.ps1)
 
 ## Getting Started
@@ -33,7 +33,7 @@ or
 
 > npm run test:two
 
-Use the following commands to test this repo:
+## Description of the commands
 
 #### 1. Full Test
 
@@ -58,6 +58,8 @@ These commands run a simple prove generation and verification with 2 sets of dat
 **Note**: The `test:full` command: Compiles the circuit, Performs the setup, Generates the Solidity verifier, Generates the proof, Generates the witness, Verifies the proof and Creates a report.
 
 **Note**: The `test:one` and `test:two` commands must be run after having run the `test:full` command at least once since they only do the following: Generate the witness, Generate the proof, Verify the proof and Create a report.
+
+**Note**: The `test:two` command must be run only after having run the `test:create` command since it uses the crafted certificates generated with OpenSSL.
 
 #### 3. Generating a local root CA certificate and signing with a user certificate
 
@@ -85,7 +87,8 @@ It will create the inputs for the contract call.
 
 ## Features
 
-- **Privacy-Preserving**: Zero-Knowledge Proof ensures only essential information is disclosed.
+- **Privacy-Preserving**: No information of the user is disclosed.
 - **Digital Signature**: Guarantees the identiy of the user as well as authenticity and integrity of the data.
-- **eIDAS-2 Compliant**: Aligned with the upcoming standard for electronic identification and trust services.
+- **eIDAS-2 Compliant**: Aligned with the EU regulation.
+- **SSI Principles**: Aligned with the SSI principles.
 - **Automated Testing**: Simple npm scripts for usage.

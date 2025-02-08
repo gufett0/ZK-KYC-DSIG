@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="2" failures="0" errors="0" time="107.291">
+  <testsuite name="ProveAndVerifyTwo" errors="0" failures="0" skipped="0" timestamp="2025-02-07T17:49:35" time="107.177" tests="2">
+    <testcase classname="ProveAndVerifyTwo Generate proof and witness" name="ProveAndVerifyTwo Generate proof and witness" time="102.806">
+    </testcase>
+    <testcase classname="ProveAndVerifyTwo Verify proof" name="ProveAndVerifyTwo Verify proof" time="2.05">
+    </testcase>
+  </testsuite>
+</testsuites>

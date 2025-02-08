@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Runned on i9-13900K 64GB ram ddr5 4200Hz-->
+<testsuites name="jest tests" tests="5" failures="0" errors="0" time="17739.152">
+  <testsuite name="FullTest" errors="0" failures="0" skipped="0" timestamp="2025-02-06T17:29:28"
+    time="17739.073" tests="5">
+    <testcase classname="FullTest Compile the circuit" name="FullTest Compile the circuit"
+      time="62.296">
+    </testcase>
+    <testcase classname="FullTest Perform setup (phase 1 and phase 2)"
+      name="FullTest Perform setup (phase 1 and phase 2)" time="17631.757">
+    </testcase>
+    <testcase classname="FullTest Generate solidity verifier"
+      name="FullTest Generate solidity verifier" time="2.218">
+    </testcase>
+    <testcase classname="FullTest Generate proof and witness"
+      name="FullTest Generate proof and witness" time="39.564">
+    </testcase>
+    <testcase classname="FullTest Verify proof" name="FullTest Verify proof" time="1.986">
+    </testcase>
+  </testsuite>
+</testsuites>
