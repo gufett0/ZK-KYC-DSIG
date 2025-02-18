@@ -1,6 +1,6 @@
 import path from "path";
 import ExecuteScriptForTest from "@/utils/executescriptfortest";
-import WriteInputJson from "@/utils/writeinputjson";
+import WriteInputJson from "@/utils/writeInputJson";
 import logger from "@/utils/logger";
 
 describe("ProveAndVerifyTwo", () => {

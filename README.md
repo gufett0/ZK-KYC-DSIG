@@ -7,6 +7,7 @@
 ## Requirements:
 
 - **Operating System**: Windows 10 or later (this project uses Powershell scripts .ps1)
+- **Circom**: Circom installed and usable globally
 - **Node.js and npm**: LTS version
 - **OpenSSL**: You need to have OpenSSL version 3 or higher installed (and the environment variables correctly set)
 - **Other**: Set the Execution Policy of the OS in order to allow the usage of the Powershell scripts (.ps1)
