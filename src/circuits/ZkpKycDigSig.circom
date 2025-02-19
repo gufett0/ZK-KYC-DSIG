@@ -28,6 +28,8 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
     
     signal input JudgePublicKeyModulus[totalChunksNumber];
 
+    signal output MessageDigest[32];
+
     //Index necessary for extracting the message digest from the signed attributes
     signal input MessageDigestPatternStartingIndex;
     var maxMessageDigestLength = 32;
@@ -68,12 +70,18 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
     messageDigestExtractor.SignedAttributes <== SignedAttributes;
     messageDigestExtractor.SignedAttributesLength <== SignedAttributesLength;
     messageDigestExtractor.MessageDigestPatternStartingIndex <== MessageDigestPatternStartingIndex;
-    signal MessageDigest[maxMessageDigestLength] <== messageDigestExtractor.MessageDigest;
+    MessageDigest <== messageDigestExtractor.MessageDigest;
+    //signal MessageDigest[maxMessageDigestLength] <== messageDigestExtractor.MessageDigest;
+    // signal extracted_MessageDigest[maxMessageDigestLength];
+    // extracted_MessageDigest <== messageDigestExtractor.MessageDigest;
+
 
     //Verify it corresponds to the hash of the content
     component verifyHash = VerifyHash(maxContentLength);
     verifyHash.bytes <== Content;
     verifyHash.expectedSha <== MessageDigest;
+    //verifyHash.expectedSha <== extracted_MessageDigest;
+    //out_MessageDigest <== extracted_MessageDigest;
 
     //4-Verify that the CONTENT is a cipher encrypted witht he judgle public key and which plain text contains the fiscal code
     component verifyRsa = VerifySimpleRsaEncryptionBase64AndExtractSubstring(maxDecryptedContentLength, maxContentLength, maxFiscalCodeLength, chunksBitLength, totalChunksNumber);
@@ -96,7 +104,7 @@ template ZkpKycDigSig(maxSignedAttributesLength, maxCertificateTbsLength, chunks
 
 
 //The content is the ciphertext of a json data structure containing a random salt and the fiscal code encrypted with the judge public key
-component main {public [CaPublicKeyModulus,JudgePublicKeyModulus,Content]}= ZkpKycDigSig(512,2048,121,17);
+component main {public [CaPublicKeyModulus,JudgePublicKeyModulus]}= ZkpKycDigSig(512,2048,121,17);
 
 //Parameters:
 //maxSignedAttributesLength: 512 should be enough 
